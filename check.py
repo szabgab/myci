@@ -64,13 +64,19 @@ def main():
             log.debug("clone repo for the first time")
             if 'credentials' in repo:
                 os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
-            cwd(server['root'])
             cmd_list = [git, 'clone', repo['url'], repo_local_dir]
             cmd = ' '.join(cmd_list)
             log.debug(cmd)
-            os.system(cmd)
+            with cwd(server['root']):
+                os.system(cmd)
+                # get current sha ?? In which branch?
         else:
             log.debug("update repository")
+            cmd_list = [git, 'fetch']
+            cmd = ' '.join(cmd_list)
+            log.debug(cmd)
+            with cwd(local_repo_path):
+                os.system(cmd)
 
     # if any of the watched repositories have changed then take the sha of each, and start a new build
     # using thoses shas:
