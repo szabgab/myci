@@ -64,9 +64,25 @@ def main():
     with open(args.config) as fh:
         config = yaml.load(fh)
 
+    update_bare_repos(config, log, server)
+
+    # For each watched(!) repo get a list of branches and the sha for each branch before and after the update
+    # TODO If sha changed
+    # TODO If branch disappeared
+    # TODO If new branch appeared
+
+    # using thoses shas:
+    #   generate new build number
+    #   for each agent:
+    #       update the local central repositories
+    #       create the new build directory
+    #       local clone the repositories, check out the give shas, run the rest of the execution
+
+
+def update_bare_repos(config, log, server):
     # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
     # TODO: How can we automate this?
-    #print(config)
+    # print(config)
     for repo in config['repos']:
         log.debug("Repo url {}".format(repo['url']))
         if repo['type'] != 'git':
@@ -81,7 +97,7 @@ def main():
         local_repo_path = os.path.join(server['root'], repo_local_dir)
         log.debug("Local repo path {}".format(local_repo_path))
 
-        if not os.path.exists( local_repo_path ):
+        if not os.path.exists(local_repo_path):
             log.debug("clone repo for the first time")
             if 'credentials' in repo:
                 os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
@@ -103,17 +119,6 @@ def main():
         new_branches = get_branches(local_repo_path)
         log.debug(yaml.dump(new_branches))
 
-    # For each watched(!) repo get a list of branches and the sha for each branch before and after the update
-    # TODO If sha changed
-    # TODO If branch disappeared
-    # TODO If new branch appeared
-
-    # using thoses shas:
-    #   generate new build number
-    #   for each agent:
-    #       update the local central repositories
-    #       create the new build directory
-    #       local clone the repositories, check out the give shas, run the rest of the execution
 
 if __name__ == '__main__':
     main()
