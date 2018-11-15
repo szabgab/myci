@@ -4,6 +4,7 @@ import logging
 import re
 import os
 from contextlib import contextmanager
+import subprocess
 
 git = 'git'
 
@@ -25,6 +26,21 @@ def setup_logger():
     sh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)-10s - %(message)s'))
     logger.addHandler(sh)
 
+# given path to a repository return a dictionary where the keys are branch names
+# the values are the sha1 of each branch
+def get_branches(path):
+    branches = {}
+    with cwd(path):
+        with open('.git/packed-refs') as fh:
+            for line in fh:
+                if re.search(r'\A#', line):
+                    continue
+                m = re.search(r'\A(\S+)\s+refs/remotes/origin/(.*)', line)
+                if m:
+                    branches[ m.group(1) ] = m.group(2)
+    return branches
+
+
 
 def main():
     setup_logger()
@@ -45,6 +61,8 @@ def main():
     with open(args.config) as fh:
         config = yaml.load(fh)
 
+    # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
+    # TODO: How can we automate this?
     #print(config)
     for repo in config['repos']:
         log.debug("Repo url {}".format(repo['url']))
@@ -70,15 +88,22 @@ def main():
             with cwd(server['root']):
                 os.system(cmd)
                 # get current sha ?? In which branch?
+            old_branches = {}
         else:
             log.debug("update repository")
+            old_branches = get_branches(local_repo_path)
             cmd_list = [git, 'fetch']
             cmd = ' '.join(cmd_list)
             log.debug(cmd)
             with cwd(local_repo_path):
                 os.system(cmd)
+        new_branches = get_branches(local_repo_path)
 
-    # if any of the watched repositories have changed then take the sha of each, and start a new build
+    # For each watched(!) repo get a list of branches and the sha for each branch before and after the update
+    # TODO If sha changed
+    # TODO If branch disappeared
+    # TODO If new branch appeared
+
     # using thoses shas:
     #   generate new build number
     #   for each agent:
