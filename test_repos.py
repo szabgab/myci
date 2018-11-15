@@ -49,7 +49,12 @@ def test_repo(tmpdir):
     # check if the cloning is was successful (there should be a master branch) or maybe not as we plan to have this as a bare repo
 
     # update the repository
-    # check.py
+    with cwd(repo1):
+        with open('README.txt', 'w') as fh:
+            fh.write("first line\n")
+        os.system("git add .")
+        os.system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
+    os.system("python check.py --server {} --config {}".format(server_file, config_file))
     # check if the sha change was noticed
 
     # create a branch

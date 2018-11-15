@@ -23,6 +23,7 @@ def setup_logger():
 def get_branches(path):
     branches = {}
     with cwd(path):
+        os.system("git pack-refs --all")
         if os.path.exists('.git/packed-refs'):
             # It seems the file does not exist if the repository is empty
             with open('.git/packed-refs') as fh:
@@ -31,7 +32,7 @@ def get_branches(path):
                         continue
                     m = re.search(r'\A(\S+)\s+refs/remotes/origin/(.*)', line)
                     if m:
-                        branches[ m.group(1) ] = m.group(2)
+                        branches[ m.group(2) ] = m.group(1)
     return branches
 
 
@@ -92,6 +93,7 @@ def main():
             with cwd(local_repo_path):
                 os.system(cmd)
         new_branches = get_branches(local_repo_path)
+        log.debug(yaml.dump(new_branches))
 
     # For each watched(!) repo get a list of branches and the sha for each branch before and after the update
     # TODO If sha changed
