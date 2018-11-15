@@ -3,19 +3,11 @@ import yaml
 import logging
 import re
 import os
-from contextlib import contextmanager
-import subprocess
+#import subprocess
+from mytools import cwd
 
 git = 'git'
 
-@contextmanager
-def cwd(path):
-    oldpwd=os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(oldpwd)
 
 def setup_logger():
     logger = logging.getLogger(__name__)
@@ -31,13 +23,15 @@ def setup_logger():
 def get_branches(path):
     branches = {}
     with cwd(path):
-        with open('.git/packed-refs') as fh:
-            for line in fh:
-                if re.search(r'\A#', line):
-                    continue
-                m = re.search(r'\A(\S+)\s+refs/remotes/origin/(.*)', line)
-                if m:
-                    branches[ m.group(1) ] = m.group(2)
+        if os.path.exists('.git/packed-refs'):
+            # It seems the file does not exist if the repository is empty
+            with open('.git/packed-refs') as fh:
+                for line in fh:
+                    if re.search(r'\A#', line):
+                        continue
+                    m = re.search(r'\A(\S+)\s+refs/remotes/origin/(.*)', line)
+                    if m:
+                        branches[ m.group(1) ] = m.group(2)
     return branches
 
 
@@ -111,6 +105,7 @@ def main():
     #       create the new build directory
     #       local clone the repositories, check out the give shas, run the rest of the execution
 
-main()
+if __name__ == '__main__':
+    main()
 
 
