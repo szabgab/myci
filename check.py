@@ -42,7 +42,7 @@ def get_branches(path):
 
 def main():
     setup_logger()
-    log = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--server', help="Server config file", required=True)
@@ -53,14 +53,14 @@ def main():
     if args.debug:
         add_logger()
 
-    log.debug("debug")
+    logger.debug("debug")
 
-    log.debug(args.server)
+    logger.debug(args.server)
     with open(args.server) as fh:
         server = yaml.load(fh)
 
 
-    log.debug(args.config)
+    logger.debug(args.config)
     with open(args.config) as fh:
         config = yaml.load(fh)
 
@@ -80,46 +80,46 @@ def main():
 
 
 def update_bare_repos(config, server):
-    log = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
 
     # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
     # TODO: How can we automate this?
     # print(config)
     for repo in config['repos']:
-        log.debug("Repo url {}".format(repo['url']))
+        logger.debug("Repo url {}".format(repo['url']))
         if repo['type'] != 'git':
             raise Exception("Unsupported repository {}".format(repo['type']))
         m = re.search(r'/([^/]*?)(\.git)?\Z', repo['url'])
         if not m:
             raise Exception("Could not parse repo url '{}'".format(repo['url']))
         repo_local_dir = m.group(1)
-        log.debug("Local repo dir {}".format(repo_local_dir))
+        logger.debug("Local repo dir {}".format(repo_local_dir))
         # TODO have a root directory for each project that is under the server root
         # TODO allow the user to supply a local directory
         local_repo_path = os.path.join(server['root'], repo_local_dir)
-        log.debug("Local repo path {}".format(local_repo_path))
+        logger.debug("Local repo path {}".format(local_repo_path))
 
         if not os.path.exists(local_repo_path):
-            log.debug("clone repo for the first time")
+            logger.debug("clone repo for the first time")
             if 'credentials' in repo:
                 os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
             cmd_list = [git, 'clone', repo['url'], repo_local_dir]
             cmd = ' '.join(cmd_list)
-            log.debug(cmd)
+            logger.debug(cmd)
             with cwd(server['root']):
                 os.system(cmd)
                 # get current sha ?? In which branch?
             old_branches = {}
         else:
-            log.debug("update repository")
+            logger.debug("update repository")
             old_branches = get_branches(local_repo_path)
             cmd_list = [git, 'fetch']
             cmd = ' '.join(cmd_list)
-            log.debug(cmd)
+            logger.debug(cmd)
             with cwd(local_repo_path):
                 os.system(cmd)
         new_branches = get_branches(local_repo_path)
-        log.debug(yaml.dump(new_branches))
+        logger.debug(yaml.dump(new_branches))
 
 
 if __name__ == '__main__':
