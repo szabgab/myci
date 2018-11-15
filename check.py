@@ -64,7 +64,7 @@ def main():
     with open(args.config) as fh:
         config = yaml.load(fh)
 
-    update_bare_repos(config, log, server)
+    update_bare_repos(config, server)
 
     # For each watched(!) repo get a list of branches and the sha for each branch before and after the update
     # TODO If sha changed
@@ -79,7 +79,9 @@ def main():
     #       local clone the repositories, check out the give shas, run the rest of the execution
 
 
-def update_bare_repos(config, log, server):
+def update_bare_repos(config, server):
+    log = logging.getLogger(__name__)
+
     # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
     # TODO: How can we automate this?
     # print(config)
