@@ -1,5 +1,5 @@
 repos:
-   main:
+   - name: main
      type: git
      url: https://github.com/szabgab/repos.git
 trigger: 1h
