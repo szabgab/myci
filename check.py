@@ -12,7 +12,10 @@ git = 'git'
 def setup_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    
+
+def add_logger():
+    logger = logging.getLogger(__name__)
+
     sh = logging.StreamHandler()
     sh.setLevel(logging.DEBUG)
     sh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)-10s - %(message)s'))
@@ -40,12 +43,17 @@ def get_branches(path):
 def main():
     setup_logger()
     log = logging.getLogger(__name__)
-    log.debug("debug")
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--server', help="Server config file", required=True)
     parser.add_argument('--config', help="Config file", required=True)
+    parser.add_argument('--debug', help="Turn on debugging", action="store_true")
     args = parser.parse_args()
+
+    if args.debug:
+        add_logger()
+
+    log.debug("debug")
 
     log.debug(args.server)
     with open(args.server) as fh:
