@@ -4,17 +4,39 @@ import os
 
 #import check
 
-def test_repo(tmpdir):
-    root = str(tmpdir)
-    print(root)
+debug = ''
+if os.environ.get('DEBUG'):
+    debug = '--debug'
 
-    server_file = os.path.join(root, 'server.yml')
-    config_file = os.path.join(root, 'config.yml')
+
+def _system(cmd):
+    print(cmd)
+    os.system(cmd)
+
+
+def test_repo(tmpdir):
+    temp_dir = str(tmpdir)
+    print(temp_dir)
+
+    remote_repos = os.path.join(str(tmpdir), 'remote_repos') # bare repos
+    client_dir   = os.path.join(str(tmpdir), 'client')       # workspace of users
+
+    root         = os.path.join(str(tmpdir), 'server')
+    server_file  = os.path.join(root, 'server.yml')
+    config_file  = os.path.join(root, 'config.yml')  # this might be in a repository
+
     repos_parent  = os.path.join(root, 'repos_parent')  # here is where we'll clone repos
     workdir       = os.path.join(root, 'workdir')
 
-    repo1 = os.path.join(root, 'repo1')
+    repo1         = os.path.join(remote_repos, 'repo1')
+    client1       = os.path.join(client_dir, 'repo1')
 
+    os.mkdir(remote_repos)
+    os.mkdir(client_dir)
+
+    os.mkdir(root)
+    os.mkdir(repos_parent)
+    os.mkdir(workdir)
 
     # create config files
     server_config = {
@@ -40,22 +62,33 @@ def test_repo(tmpdir):
     # in a subdirectory crete a git repository
     os.mkdir(repo1)
     with cwd(repo1):
-        os.system("git init")  # TODO this should be a bare repo and we should have a client dir as well
+        _system("git init --bare")
+    with cwd(client_dir):
+        _system("git clone " + repo1)
 
-    # create another subdirectory for root
-    os.mkdir(repos_parent)
-    os.system("python check.py --server {} --config {}".format(server_file, config_file))
+
+    _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
     assert os.path.exists( os.path.join(repos_parent, 'repo1') )
-    # check if the cloning is was successful (there should be a master branch) or maybe not as we plan to have this as a bare repo
+    assert os.listdir( os.path.join(repos_parent, 'repo1/') ) == ['.git']
+    assert not os.path.exists(os.path.join(workdir, '1', 'repo1/'))
+
+
+# git rev-parse HEAD
 
     # update the repository
-    with cwd(repo1):
+    with cwd(client1):
         with open('README.txt', 'w') as fh:
             fh.write("first line\n")
-        os.system("git add .")
-        os.system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
-    os.system("python check.py --server {} --config {}".format(server_file, config_file))
+        _system("git add .")
+        _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
+        _system("git push")
+    _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
+    assert os.listdir( os.path.join(repos_parent, 'repo1/') ) == ['README.txt', '.git']
+    assert os.path.exists(os.path.join(workdir, '1', 'repo1/'))
+    assert os.listdir(os.path.join(workdir, '1', 'repo1/')) == ['README.txt', '.git']
     # check if the sha change was noticed
+
+
 
     # create a branch
     # check.py
