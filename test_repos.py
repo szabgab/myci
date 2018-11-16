@@ -88,9 +88,31 @@ def test_repo(tmpdir):
     assert os.listdir(os.path.join(workdir, '1', 'repo1/')) == ['README.txt', '.git']
     # check if the sha change was noticed
 
+    # create a branch, see if the new branch is noticed
+    with cwd(client1):
+        with open('TODO', 'w') as fh:
+            fh.write("Some TODO text\n")
+        _system("git checkout -b todo")
+        _system("git add .")
+        _system("git commit -m 'add test' --author 'Foo Bar <foo@bar.com>'")
+        _system("git push --set-upstream origin todo")
 
+        _system("git checkout master")
+        with open('MASTER', 'w') as fh:
+            fh.write("Some MASTER text\n")
+        _system("git add .")
+        _system("git commit -m 'add master' --author 'Foo Bar <foo@bar.com>'")
+        _system("git push")
+    _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
 
-    # create a branch
-    # check.py
-    # test if the new branch is noticed
+    # first workdir did not change
+    assert os.path.exists(os.path.join(workdir, '1', 'repo1/'))
+    assert os.listdir(os.path.join(workdir, '1', 'repo1/')) == ['README.txt', '.git']
 
+    # second workdir has the new file as well
+    assert os.path.exists(os.path.join(workdir, '2', 'repo1/'))
+    assert os.listdir(os.path.join(workdir, '2', 'repo1/')) == ['MASTER', 'README.txt', '.git']
+
+    # second workdir has the new file as well
+    assert os.path.exists(os.path.join(workdir, '3', 'repo1/'))
+    assert os.listdir(os.path.join(workdir, '3', 'repo1/')) == ['TODO', 'README.txt', '.git']

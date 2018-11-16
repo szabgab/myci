@@ -15,3 +15,5 @@
 * Remove the root directory of the job 
 
 * Alternative cleanup: Keep the N most recent build directories around
+
+* A list of steps to execute, each one should probably be a comand line script

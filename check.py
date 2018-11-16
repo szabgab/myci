@@ -75,7 +75,7 @@ def main():
     # TODO If branch disappeared
     # TODO If new branch appeared
 
-    for branch in new_branches.keys():
+    for branch in sorted(new_branches.keys()):
         if branch in old_branches:
             if old_branches[branch] == new_branches[branch]:
                 pass
@@ -114,15 +114,19 @@ def build(server, config, sha1):
     os.mkdir(build_directory)
     with cwd(build_directory):
         for repo in config['repos']:
+            logger.debug("Clone the repositories")
             repo_local_name = get_repo_local_name(repo)
             cmd_list = [git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name]
             cmd = ' '.join(cmd_list)
             logger.debug(cmd)
             os.system(cmd)
             with cwd(repo_local_name):
+                logger.debug("Check out the given shas")
                 cmd_list = [git, 'checkout', sha1]
-
-    #   local clone the repositories, check out the give shas, run the rest of the execution
+                cmd = ' '.join(cmd_list)
+                logger.debug(cmd)
+                os.system(cmd)
+        # TODO: run the steps defined in the configuration
 
 def get_repo_local_name(repo):
     m = re.search(r'/([^/]*?)(\.git)?\Z', repo['url'])
