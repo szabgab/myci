@@ -22,11 +22,11 @@ class TestRepo(object):
         client_dir   = os.path.join(str(tmpdir), 'client')       # workspace of users
 
         root         = os.path.join(str(tmpdir), 'server')
-        server_file  = os.path.join(root, 'server.yml')
-        config_file  = os.path.join(root, 'config.yml')  # this might be in a repository
+        self.server_file  = os.path.join(root, 'server.yml')
+        self.config_file  = os.path.join(root, 'config.yml')  # this might be in a repository
 
-        repos_parent  = os.path.join(root, 'repos_parent')  # here is where we'll clone repos
-        workdir       = os.path.join(root, 'workdir')
+        self.repos_parent  = os.path.join(root, 'repos_parent')  # here is where we'll clone repos
+        self.workdir       = os.path.join(root, 'workdir')
 
         repo1         = os.path.join(remote_repos, 'repo1')
         client1       = os.path.join(client_dir, 'repo1')
@@ -35,15 +35,15 @@ class TestRepo(object):
         os.mkdir(client_dir)
 
         os.mkdir(root)
-        os.mkdir(repos_parent)
-        os.mkdir(workdir)
+        os.mkdir(self.repos_parent)
+        os.mkdir(self.workdir)
 
         # create config files
         server_config = {
-            'root':    repos_parent,
-            'workdir': workdir,
+            'root':    self.repos_parent,
+            'workdir': self.workdir,
         }
-        with open(server_file, 'w') as fh:
+        with open(self.server_file, 'w') as fh:
             fh.write(yaml.dump(server_config, explicit_start=True,  default_flow_style=False))
 
         user_config = {
@@ -55,7 +55,7 @@ class TestRepo(object):
                          }
                      ]
         }
-        with open(config_file, 'w') as fh:
+        with open(self.config_file, 'w') as fh:
             fh.write(yaml.dump(user_config, explicit_start=True,  default_flow_style=False))
 
 
@@ -67,10 +67,10 @@ class TestRepo(object):
             _system("git clone " + repo1)
 
 
-        _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
-        assert os.path.exists( os.path.join(repos_parent, 'repo1') )
-        assert os.listdir( os.path.join(repos_parent, 'repo1/') ) == ['.git']
-        assert not os.path.exists(os.path.join(workdir, '1', 'repo1/'))
+        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
+        assert os.path.exists( os.path.join(self.repos_parent, 'repo1') )
+        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['.git']
+        assert not os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
 
 
     # git rev-parse HEAD
@@ -82,10 +82,10 @@ class TestRepo(object):
             _system("git add .")
             _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
             _system("git push")
-        _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
-        assert os.listdir( os.path.join(repos_parent, 'repo1/') ) == ['README.txt', '.git']
-        assert os.path.exists(os.path.join(workdir, '1', 'repo1/'))
-        assert os.listdir(os.path.join(workdir, '1', 'repo1/')) == ['README.txt', '.git']
+        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
+        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['README.txt', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
+        assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['README.txt', '.git']
         # check if the sha change was noticed
 
         # create a branch, see if the new branch is noticed
@@ -103,16 +103,16 @@ class TestRepo(object):
             _system("git add .")
             _system("git commit -m 'add master' --author 'Foo Bar <foo@bar.com>'")
             _system("git push")
-        _system("python check.py --server {} --config {} {}".format(server_file, config_file, debug))
+        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
 
         # first workdir did not change
-        assert os.path.exists(os.path.join(workdir, '1', 'repo1/'))
-        assert os.listdir(os.path.join(workdir, '1', 'repo1/')) == ['README.txt', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
+        assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['README.txt', '.git']
 
         # second workdir has the new file as well
-        assert os.path.exists(os.path.join(workdir, '2', 'repo1/'))
-        assert os.listdir(os.path.join(workdir, '2', 'repo1/')) == ['MASTER', 'README.txt', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '2', 'repo1/'))
+        assert os.listdir(os.path.join(self.workdir, '2', 'repo1/')) == ['MASTER', 'README.txt', '.git']
 
         # second workdir has the new file as well
-        assert os.path.exists(os.path.join(workdir, '3', 'repo1/'))
-        assert os.listdir(os.path.join(workdir, '3', 'repo1/')) == ['TODO', 'README.txt', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '3', 'repo1/'))
+        assert os.listdir(os.path.join(self.workdir, '3', 'repo1/')) == ['TODO', 'README.txt', '.git']
