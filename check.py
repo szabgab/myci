@@ -14,6 +14,16 @@ def setup_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
+    root = os.path.dirname(os.path.abspath(__file__))
+    logdir = os.path.join(root, 'logs')
+    if not os.path.exists(logdir):
+        os.mkdir(logdir)
+
+    fh = logging.FileHandler(os.path.join(logdir, 'my.log'))
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter( logging.Formatter('%(asctime)s - %(name)s - %(levelname)-10s - %(message)s') )
+    logger.addHandler(fh)
+
 def add_logger():
     logger = logging.getLogger(__name__)
 
