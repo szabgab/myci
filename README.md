@@ -5,7 +5,6 @@ Some CI system
 
 ## TODO
 
-* Create a log file so we can see what the server does.
 * Send notifications
 * Create a web application to show the build director
 * Run steps (test)
