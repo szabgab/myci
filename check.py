@@ -25,6 +25,15 @@ def setup_logger():
     fh.setFormatter( logging.Formatter('%(asctime)s - %(name)s - %(levelname)-10s - %(message)s') )
     logger.addHandler(fh)
 
+def add_build_logger(build_directory):
+    logger = logging.getLogger(__name__)
+
+    fh = logging.FileHandler(os.path.join(build_directory, 'ci.log'))
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter( logging.Formatter('%(asctime)s - %(name)s - %(levelname)-10s - %(message)s') )
+    logger.addHandler(fh)
+
+
 def add_logger():
     logger = logging.getLogger(__name__)
 
@@ -123,6 +132,9 @@ def build(server, config, sha1):
     build_directory = os.path.join(server['workdir'], str(build_number))
     logger.debug("Build dir: {}".format(build_directory))
     os.mkdir(build_directory)
+
+    bg = add_build_logger(build_directory)
+    logger.debug("Starting Build {} in directory: {}".format(build_number, build_directory))
     with cwd(build_directory):
         for repo in config['repos']:
             logger.debug("Clone the repositories")
@@ -138,6 +150,7 @@ def build(server, config, sha1):
                 logger.debug(cmd)
                 os.system(cmd)
         # TODO: run the steps defined in the configuration
+    logger.removeHandler(bg)
 
 def get_repo_local_name(repo):
     m = re.search(r'/([^/]*?)(\.git)?\Z', repo['url'])
