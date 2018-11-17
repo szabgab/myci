@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import yaml
 import logging
 import re
@@ -19,7 +20,7 @@ def setup_logger():
     if not os.path.exists(logdir):
         os.mkdir(logdir)
 
-    fh = logging.FileHandler(os.path.join(logdir, 'my.log'))
+    fh = logging.FileHandler(os.path.join(logdir, datetime.datetime.now().strftime("%Y-%m-%d.log")))
     fh.setLevel(logging.DEBUG)
     fh.setFormatter( logging.Formatter('%(asctime)s - %(name)s - %(levelname)-10s - %(message)s') )
     logger.addHandler(fh)
