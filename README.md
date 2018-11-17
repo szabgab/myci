@@ -1,3 +1,16 @@
+# Repos
+
+Some CI system
+
+
+## TODO
+
+* Run steps (test)
+* Execute the whole thing on a remote machine to which we have passwordless ssh access
+
+
+## Plan
+
 
 * Configure generic repositories with credentials needed to read from them.
 * the system will clone the repository to some central place
@@ -17,3 +30,35 @@
 * Alternative cleanup: Keep the N most recent build directories around
 
 * A list of steps to execute, each one should probably be a comand line script
+
+* Mode 1: We have a central git repository with the configuration of the server and the jobs we would like to run on it.
+* Mode 2: In the central configuration we have the pointer to the repositories and each repository has its own configurations. (But then maybe there is not need for monitoring other repositories?)
+
+
+
+## Deployment
+
+This is just one possibility
+
+* Create a "micro" sized instance in Google Cloud Platform (0.6 Gb memory)
+* Install Ubuntu 18.10 on a 10 Gb disk
+* SSH to that machine
+
+```
+mkdir work
+mkdir work/repos_parent
+mkdir work/build_parent
+git clone https://github.com/szabgab/repos.git
+```
+
+Add the following line to the crontab:
+
+```
+* * * * * python3 repos/check.py --server repos/server.yml --config repos/config.yml
+```
+
+(Run crontab -e and replace all the comment lines with the line above)
+
+
+
+
