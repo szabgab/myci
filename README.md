@@ -6,8 +6,9 @@ Some CI system
 ## TODO
 
 * Send notifications
-* Create a web application to show the build director
+* Create a web application to show the build directory
 * Run steps (test)
+* Save artifacts
 * Execute the whole thing on a remote machine to which we have passwordless ssh access
 
 
