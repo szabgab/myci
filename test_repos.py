@@ -17,24 +17,7 @@ class TestRepo(object):
     def test_repo(self, tmpdir):
         temp_dir = str(tmpdir)
         print(temp_dir)
-        self.setup_repos(temp_dir, 1)
-
-        user_config = {
-            'repos': [
-                         {
-                             'name' : 'main',
-                             'type' : 'git',
-                         }
-                     ]
-        }
-        for i in range(1):
-            user_config['repos'][i]['url'] = self.repo[i]
-
-        with open(self.config_file, 'w') as fh:
-            fh.write(yaml.dump(user_config, explicit_start=True,  default_flow_style=False))
-
-
-
+        self.setup_repos(temp_dir, {}, 1)
 
         _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
         assert os.path.exists( os.path.join(self.repos_parent, 'repo0') )
@@ -86,7 +69,7 @@ class TestRepo(object):
         assert os.path.exists(os.path.join(self.workdir, '3', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '3', 'repo0/')) == ['TODO', 'README.txt', '.git']
 
-    def setup_repos(self, temp_dir, count):
+    def setup_repos(self, temp_dir, user_config, count):
         remote_repos = os.path.join(temp_dir, 'remote_repos')  # bare repos
         client_dir = os.path.join(temp_dir, 'client')  # workspace of users
         root = os.path.join(temp_dir, 'server')
@@ -120,3 +103,16 @@ class TestRepo(object):
                 _system("git init --bare")
             with cwd(client_dir):
                 _system("git clone " + self.repo[i])
+
+        user_config['repos'] = []
+        for i in range(count):
+            user_config['repos'].append({
+                    'name': 'repo' + str(i),
+                    'type': 'git',
+                    'url': self.repo[i],
+                })
+
+        with open(self.config_file, 'w') as fh:
+            fh.write(yaml.dump(user_config, explicit_start=True,  default_flow_style=False))
+
+
