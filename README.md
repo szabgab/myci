@@ -5,6 +5,9 @@ Some CI system
 
 ## TODO
 
+* Create a log file so we can see what the server does.
+* Send notifications
+* Create a web application to show the build director
 * Run steps (test)
 * Execute the whole thing on a remote machine to which we have passwordless ssh access
 
@@ -60,5 +63,16 @@ Add the following line to the crontab:
 (Run crontab -e and replace all the comment lines with the line above)
 
 
+Update and upgrade packages (just normal sysadmin stuff)
 
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+Install mail client and server  (accept the defaults)
+
+```
+sudo apt-get install mailutils
+```
 
