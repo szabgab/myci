@@ -24,10 +24,12 @@ class TestRepo(object):
                          {
                              'name' : 'main',
                              'type' : 'git',
-                             'url'  : self.repo[0],
                          }
                      ]
         }
+        for i in range(1):
+            user_config['repos'][i]['url'] = self.repo[i]
+
         with open(self.config_file, 'w') as fh:
             fh.write(yaml.dump(user_config, explicit_start=True,  default_flow_style=False))
 
