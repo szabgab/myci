@@ -6,7 +6,7 @@ import re
 import os
 import fcntl
 #import subprocess
-from mytools import cwd
+from mytools import cwd, capture2
 
 git = 'git'
 
@@ -182,20 +182,20 @@ def update_central_repos(config, server):
             if 'credentials' in repo:
                 os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
             cmd_list = [git, 'clone', repo['url'], repo_local_name]
-            cmd = ' '.join(cmd_list)
-            logger.debug(cmd)
+            logger.debug(' '.join(cmd_list))
             with cwd(server['root']):
-                os.system(cmd)
+                code, out = capture2(cmd_list)
+            logger.debug("{} {}".format(code, out))
                 # get current sha ?? In which branch?
             old_branches = {}
         else:
             logger.debug("update repository")
             old_branches = get_branches(local_repo_path)
             cmd_list = [git, 'pull']
-            cmd = ' '.join(cmd_list)
-            logger.debug(cmd)
+            logger.debug(' '.join(cmd_list))
             with cwd(local_repo_path):
-                os.system(cmd)
+                code, out = capture2(cmd_list)
+            logger.debug("{} {}".format(code, out))
         new_branches = get_branches(local_repo_path)
         logger.debug(yaml.dump(new_branches))
     return old_branches, new_branches
