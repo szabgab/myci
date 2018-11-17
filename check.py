@@ -149,7 +149,20 @@ def build(server, config, sha1):
                 cmd = ' '.join(cmd_list)
                 logger.debug(cmd)
                 os.system(cmd)
-        # TODO: run the steps defined in the configuration
+
+        if 'steps' in config:
+            logger.debug("Run the steps defined in the configuration")
+            for step in config['steps']:
+                logger.debug(step)
+                m = re.search(r'\Acli:\s*(.*)', step)
+                cmd = m.group(1)
+                logger.debug(cmd)
+                code, out = capture2(cmd, shell=True)
+                logger.debug(code)
+                logger.debug(out)
+                if code != 0:
+                    exit(code)
+
     logger.removeHandler(bg)
 
 def get_repo_local_name(repo):

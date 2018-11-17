@@ -1,4 +1,4 @@
-from mytools import cwd
+from mytools import cwd, capture2
 import yaml
 import os
 
@@ -24,9 +24,6 @@ class TestRepo(object):
         assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['.git']
         assert not os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
 
-
-    # git rev-parse HEAD
-
         # update the repository
         with cwd(self.client[0]):
             with open('README.txt', 'w') as fh:
@@ -38,7 +35,7 @@ class TestRepo(object):
         assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['README.txt', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['README.txt', '.git']
-        # check if the sha change was noticed
+        # check if the sha change was noticed git rev-parse HEAD
 
         # create a branch, see if the new branch is noticed
         with cwd(self.client[0]):
@@ -55,7 +52,9 @@ class TestRepo(object):
             _system("git add .")
             _system("git commit -m 'add master' --author 'Foo Bar <foo@bar.com>'")
             _system("git push")
-        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
+        code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
+        print(out)
+        assert code == 0
 
         # first workdir did not change
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
@@ -68,6 +67,46 @@ class TestRepo(object):
         # second workdir has the new file as well
         assert os.path.exists(os.path.join(self.workdir, '3', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '3', 'repo0/')) == ['TODO', 'README.txt', '.git']
+
+    def test_run_tests(self, tmpdir):
+        temp_dir = str(tmpdir)
+        print(temp_dir)
+        self.setup_repos(temp_dir, {
+            'steps': [
+                "cli: python repo0/selftest.py"
+            ]
+        }, 1)
+
+        # update the repository
+        with cwd(self.client[0]):
+            with open('selftest.py', 'w') as fh:
+                fh.write("exit(13)\n")
+            _system("git add .")
+            _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
+            _system("git push")
+        code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
+        print(out)
+        assert code == 13, "test failure repored"
+        #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
+        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['selftest.py', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
+        assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['selftest.py', '.git']
+
+
+        with cwd(self.client[0]):
+            with open('selftest.py', 'w') as fh:
+                fh.write("exit(0)\n")
+            _system("git add .")
+            _system("git commit -m 'second' --author 'Foo Bar <foo@bar.com>'")
+            _system("git push")
+        code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
+        print(out)
+        assert code == 0, "test sucess repored: "
+        #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
+        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['selftest.py', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '2', 'repo0/'))
+        assert os.listdir(os.path.join(self.workdir, '2', 'repo0/')) == ['selftest.py', '.git']
+
 
     def setup_repos(self, temp_dir, user_config, count):
         remote_repos = os.path.join(temp_dir, 'remote_repos')  # bare repos
