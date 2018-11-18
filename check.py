@@ -161,16 +161,10 @@ def clone_repositories(server, config, sha1):
     logger.debug("Clone the repositories")
     for repo in config['repos']:
         repo_local_name = get_repo_local_name(repo)
-        cmd_list = [git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name]
-        cmd = ' '.join(cmd_list)
-        logger.debug(cmd)
-        os.system(cmd)
+        _system([git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name])
         with cwd(repo_local_name):
             logger.debug("Check out the given shas")
-            cmd_list = [git, 'checkout', sha1]
-            cmd = ' '.join(cmd_list)
-            logger.debug(cmd)
-            os.system(cmd)
+            _system([git, 'checkout', sha1])
 
 def build(server, config, sha1):
     logger = logging.getLogger(__name__)
