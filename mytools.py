@@ -18,6 +18,7 @@ def capture2(cmd, shell = False):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT,
                             shell = shell,
+                            universal_newlines = True,
                             )
     stdout, stderr = proc.communicate()
 
