@@ -16,15 +16,16 @@ def _system(cmd):
 
     if type(cmd).__name__ == 'list':
         cmd_list = cmd
-        logger.debug(' '.join(cmd))
+        cmd_str = ' '.join(cmd)
     elif type(cmd).__name__ == 'str':
         cmd_list = shlex.split(cmd)
-        logger.debug(cmd)
+        cmd_str = cmd
     else:
         raise Exception("Invalid paramerer type: " + type(cmd).__name__)
 
+    logger.debug(cmd_str)
     code, out = capture2(cmd_list)
-    logger.debug("Exit code {}".format(code))
+    logger.debug("Exit code for {} is {}".format(cmd_str, code))
     logger.debug(out)
     return code, out
 
