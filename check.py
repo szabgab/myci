@@ -25,8 +25,7 @@ def _system(cmd):
 
     logger.debug(cmd_str)
     code, out = capture2(cmd_list)
-    logger.debug("Exit code for {} is {}".format(cmd_str, code))
-    logger.debug(out)
+    logger.debug("Exit code for '{}' is '{}'. Output is {}.".format(cmd_str, code, out))
     return code, out
 
 
