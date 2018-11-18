@@ -16,10 +16,26 @@ def capture2(cmd, shell = False):
     os.environ['PYTHONUNBUFFERED'] = "1"
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
+                            stderr=subprocess.PIPE,
                             shell = shell,
                             universal_newlines = True,
                             )
-    stdout, stderr = proc.communicate()
 
-    return proc.returncode, stdout
+
+    stdout = []
+    stderr = []
+    mix = []
+    while proc.poll() is None:
+        line = proc.stdout.readline()
+        if line != "":
+            stdout.append(line)
+            mix.append(line)
+            print(line, end='')
+
+        line = proc.stderr.readline()
+        if line != "":
+            stderr.append(line)
+            mix.append(line)
+            print(line, end='')
+
+    return proc.returncode, ''.join(mix)
