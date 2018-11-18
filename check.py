@@ -88,6 +88,7 @@ def main():
     parser.add_argument('--config', help="Config file", required=True)
     parser.add_argument('--debug', help="Turn on debugging", action="store_true")
     parser.add_argument('--current', help="Run the current commit of the given branch of the main repository. (No new changes incorporated)")
+    parser.add_argument('--branch', help="Update all the repositories and then run this branch.")
     args = parser.parse_args()
 
     if args.debug:
@@ -128,6 +129,15 @@ def main():
     # TODO If sha changed
     # TODO If branch disappeared
     # TODO If new branch appeared
+
+    if args.branch:
+        if args.branch not in new_branches:
+            raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
+
+        logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
+        build(server, config, new.branches[args.branch])
+        return
+
 
     for branch in sorted(new_branches.keys()):
         if branch in old_branches:
