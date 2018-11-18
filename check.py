@@ -138,6 +138,23 @@ def get_next_build_number(server):
             fh.write(str(count))
     return count
 
+def clone_repositories(server, config, sha1):
+    logger = logging.getLogger(__name__)
+
+    logger.debug("Clone the repositories")
+    for repo in config['repos']:
+        repo_local_name = get_repo_local_name(repo)
+        cmd_list = [git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name]
+        cmd = ' '.join(cmd_list)
+        logger.debug(cmd)
+        os.system(cmd)
+        with cwd(repo_local_name):
+            logger.debug("Check out the given shas")
+            cmd_list = [git, 'checkout', sha1]
+            cmd = ' '.join(cmd_list)
+            logger.debug(cmd)
+            os.system(cmd)
+
 def build(server, config, sha1):
     logger = logging.getLogger(__name__)
     build_number = get_next_build_number(server)
@@ -145,27 +162,29 @@ def build(server, config, sha1):
     # TODO store the build in some queue and also allow the parallel execution of jobs on agents
 
     # update_local_repositories()
-    build_directory = os.path.join(server['workdir'], str(build_number))
-    logger.debug("Build dir: {}".format(build_directory))
-    os.mkdir(build_directory)
+    build_parent_directory = os.path.join(server['workdir'], str(build_number))
+    logger.debug("Build parent dir: {}".format(build_parent_directory))
+    os.mkdir(build_parent_directory)
 
-    bg = add_build_logger(build_directory)
-    logger.debug("Starting Build {} in directory: {}".format(build_number, build_directory))
+    bg = add_build_logger(build_parent_directory)
+    logger.debug("Starting Build {} in directory: {}".format(build_number, build_parent_directory))
+
+
+    if 'matrix' in config:
+        subbuild = 0
+        for m in config['matrix']:
+            subbuild += 1
+            logger.debug("On agent {} schedule exe: {}".format(m['agent'], m['exe']))
+            build_directory = os.path.join( build_parent_directory, str(subbuild) )
+            os.mkdir(build_directory)
+            with cwd(build_directory):
+                clone_repositories(server, config, sha1)
+                # run exe
+        return
+
+    build_directory = build_parent_directory
     with cwd(build_directory):
-        for repo in config['repos']:
-            logger.debug("Clone the repositories")
-            repo_local_name = get_repo_local_name(repo)
-            cmd_list = [git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name]
-            cmd = ' '.join(cmd_list)
-            logger.debug(cmd)
-            os.system(cmd)
-            with cwd(repo_local_name):
-                logger.debug("Check out the given shas")
-                cmd_list = [git, 'checkout', sha1]
-                cmd = ' '.join(cmd_list)
-                logger.debug(cmd)
-                os.system(cmd)
-
+        clone_repositories(server, config, sha1)
         if 'steps' in config:
             logger.debug("Run the steps defined in the configuration")
             for step in config['steps']:
@@ -178,6 +197,7 @@ def build(server, config, sha1):
                 logger.debug(out)
                 if code != 0:
                     exit(code)
+
 
     logger.removeHandler(bg)
 

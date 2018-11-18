@@ -107,6 +107,44 @@ class TestRepo(object):
         assert os.path.exists(os.path.join(self.workdir, '2', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '2', 'repo0/')) == ['selftest.py', '.git']
 
+    def test_run_matrix(self, tmpdir):
+        temp_dir = str(tmpdir)
+        print(temp_dir)
+        self.setup_repos(temp_dir, {
+            'matrix': [
+                    {
+                        'agent': 'master',
+                        'exe': 'echo one',
+                    },
+                    {
+                        'agent': 'master',
+                        'exe': 'echo two',
+                    },
+                ]
+        }, 1)
+
+        # update the repository
+        with cwd(self.client[0]):
+            with open('code.py', 'w') as fh:
+                fh.write("""
+import sys
+print("hello world")
+#sys.argv[1]
+""")
+
+            _system("git add .")
+            _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
+            _system("git push")
+        code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
+        print(out)
+        assert code == 0, "test success"
+        #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
+        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['code.py', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1/1', 'repo0/'))
+        assert os.listdir(os.path.join(self.workdir, '1/1', 'repo0/')) == ['code.py', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1/2', 'repo0/'))
+        assert os.listdir(os.path.join(self.workdir, '1/2', 'repo0/')) == ['code.py', '.git']
+
 
     def setup_repos(self, temp_dir, user_config, count):
         remote_repos = os.path.join(temp_dir, 'remote_repos')  # bare repos
