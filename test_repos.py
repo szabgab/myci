@@ -114,11 +114,11 @@ class TestRepo(object):
             'matrix': [
                     {
                         'agent': 'master',
-                        'exe': 'echo one',
+                        'exe': 'python repo0/code.py Foo',
                     },
                     {
                         'agent': 'master',
-                        'exe': 'echo two',
+                        'exe': 'python repo0/code.py Bar',
                     },
                 ]
         }, 1)
@@ -128,8 +128,7 @@ class TestRepo(object):
             with open('code.py', 'w') as fh:
                 fh.write("""
 import sys
-print("hello world")
-#sys.argv[1]
+print("hello " + sys.argv[1])
 """)
 
             _system("git add .")
@@ -144,6 +143,7 @@ print("hello world")
         assert os.listdir(os.path.join(self.workdir, '1/1', 'repo0/')) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/2', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1/2', 'repo0/')) == ['code.py', '.git']
+        assert os.path.exists( os.path.join(self.workdir, '1/results.json') )
 
 
     def setup_repos(self, temp_dir, user_config, count):

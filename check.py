@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import json
 import yaml
 import logging
 import re
@@ -172,14 +173,24 @@ def build(server, config, sha1):
 
     if 'matrix' in config:
         subbuild = 0
-        for m in config['matrix']:
+        results = {}
+        for case in config['matrix']:
             subbuild += 1
-            logger.debug("On agent {} schedule exe: {}".format(m['agent'], m['exe']))
+            logger.debug("On agent '{}' schedule exe: '{}'".format(case['agent'], case['exe']))
             build_directory = os.path.join( build_parent_directory, str(subbuild) )
             os.mkdir(build_directory)
             with cwd(build_directory):
                 clone_repositories(server, config, sha1)
-                # run exe
+                code, out = capture2(case['exe'], shell=True)
+                results[subbuild] = {
+                    'exit': code,
+                    'agent': case['agent'],
+                    'exe': case['exe'],
+                    'out': out,
+                }
+                print(out) # ??
+        with open(os.path.join(build_parent_directory, 'results.json'), "w") as fh:
+            json.dump(results, fh)
         return
 
     build_directory = build_parent_directory
