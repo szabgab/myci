@@ -184,6 +184,11 @@ print("hello " + sys.argv[1])
         server_config = {
             'root': self.repos_parent,
             'workdir': self.workdir,
+            'agents' : {
+                'master' : {
+                    'limit' : 1
+                }
+            }
         }
         with open(self.server_file, 'w') as fh:
             fh.write(yaml.dump(server_config, explicit_start=True, default_flow_style=False))

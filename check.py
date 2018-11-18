@@ -177,18 +177,29 @@ def build(server, config, sha1):
         for case in config['matrix']:
             subbuild += 1
             logger.debug("On agent '{}' schedule exe: '{}'".format(case['agent'], case['exe']))
-            build_directory = os.path.join( build_parent_directory, str(subbuild) )
-            os.mkdir(build_directory)
-            with cwd(build_directory):
-                clone_repositories(server, config, sha1)
-                code, out = capture2(case['exe'], shell=True)
-                results[subbuild] = {
-                    'exit': code,
-                    'agent': case['agent'],
-                    'exe': case['exe'],
-                    'out': out,
-                }
-                print(out) # ??
+            if case['agent'] not in server['agents']:
+                raise Exception("Agent '{}' is not available.".format(case['agent']))
+            if case['agent'] == 'master':
+                # TODO use the limit to run in parallel
+                build_directory = os.path.join( build_parent_directory, str(subbuild) )
+                os.mkdir(build_directory)
+                with cwd(build_directory):
+                    clone_repositories(server, config, sha1)
+                    code, out = capture2(case['exe'], shell=True)
+                    results[subbuild] = {
+                        'exit': code,
+                        'agent': case['agent'],
+                        'exe': case['exe'],
+                        'out': out,
+                    }
+                    print(out) # ??
+            else:
+                pass
+                # TODO
+                # ssh host
+                # scp our code, the configuration files (that are appropriate to that machine)
+                # clone the directories
+                # run the build
         with open(os.path.join(build_parent_directory, 'results.json'), "w") as fh:
             json.dump(results, fh)
         return
