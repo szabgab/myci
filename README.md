@@ -7,9 +7,12 @@ Some CI system
 
 * Send notifications
 * Create a web application to show the build directory
-* Run steps (test)
 * Save artifacts
 * Execute the whole thing on a remote machine to which we have passwordless ssh access
+* When we notice an update, generate a list of execution modes (each one has a bunch of parameters, an agentm and a sub-build number)
+* On each agent set up the git repository as necessary with the appropriate sha values.
+* Run the steps on each agent
+* Have a post process to collect the results.
 
 
 ## Plan
