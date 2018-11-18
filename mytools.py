@@ -39,4 +39,14 @@ def capture2(cmd, shell = False):
             mix.append(line)
             print(line, end='')
 
+    left = proc.stderr.read()
+    stderr.append(left)
+    mix.append(left)
+    print(left, end='')
+
+    left = proc.stdout.read()
+    stdout.append(left)
+    mix.append(left)
+    print(left, end='')
+
     return proc.returncode, ''.join(mix)
