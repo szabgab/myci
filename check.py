@@ -268,7 +268,7 @@ def update_central_repos(config, server):
                 code, out = capture2(cmd_list)
             logger.debug("{} {}".format(code, out))
         new_branches = get_branches(local_repo_path)
-        logger.debug(yaml.dump(new_branches))
+        #logger.debug(yaml.dump(new_branches))
     return old_branches, new_branches
 
 
