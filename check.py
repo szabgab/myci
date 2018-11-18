@@ -253,6 +253,7 @@ def update_central_repos(config, server):
     # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
     # TODO: How can we automate this?
     # print(config)
+    first = True # only return branches of the first repository
     for repo in config['repos']:
         logger.debug("Repo url {}".format(repo['url']))
         if repo['type'] != 'git':
@@ -275,14 +276,18 @@ def update_central_repos(config, server):
             with cwd(server['root']):
                 code, out = _system(cmd_list)
             # get current sha ?? In which branch?
-            old_branches = {}
+            if first:
+                old_branches = {}
         else:
             logger.debug("update repository")
-            old_branches = get_branches(local_repo_path)
+            if first:
+                old_branches = get_branches(local_repo_path)
             cmd_list = [git, 'pull']
             with cwd(local_repo_path):
                 code, out = _system(cmd_list)
-        new_branches = get_branches(local_repo_path)
+        if first:
+            new_branches = get_branches(local_repo_path)
+            first = False
         #logger.debug(yaml.dump(new_branches))
     return old_branches, new_branches
 
