@@ -168,12 +168,16 @@ if sys.argv[1] == "crash":
                 '3': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'},
             },
         }
+        out_of_last = last.pop('out')
         assert last == {
             'exit': 1,
             'agent': 'master',
             'exe': 'python repo0/code.py crash',
-            'out': 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n    print(42/v)\nZeroDivisionError: division by zero\n'
         }
+        # Then end of the error message has changed so we don't test the specifics
+        # In Python 2: integer division or modulo by zero
+        # In Python 3: division by zero
+        assert 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n    print(42/v)\nZeroDivisionError:' in out_of_last
 
     def test_repos(self, tmpdir):
         temp_dir = str(tmpdir)
