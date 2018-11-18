@@ -64,7 +64,7 @@ def add_logger():
 def get_branches(path):
     branches = {}
     with cwd(path):
-        os.system("git pack-refs --all")
+        _system([git, 'pack-refs', '--all'])
         if os.path.exists('.git/packed-refs'):
             # It seems the file does not exist if the repository is empty
             with open('.git/packed-refs') as fh:
