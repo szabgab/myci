@@ -11,6 +11,22 @@ from mytools import cwd, capture2
 
 git = 'git'
 
+def _system(cmd):
+    logger = logging.getLogger(__name__)
+
+    if type(cmd).__name__ == 'list':
+        logger.debug(' '.join(cmd))
+        code, out = capture2(cmd)
+    elif type(cmd).__name__ == 'str':
+        logger.debug(cmd)
+        code, out = capture2(cmd, shell = True)
+    else:
+        raise Exception("Invalid paramerer type: " + type(cmd).__name__)
+
+    logger.debug(code)
+    logger.debug(out)
+    return code, out
+
 
 def setup_logger():
     logger = logging.getLogger(__name__)
@@ -185,14 +201,13 @@ def build(server, config, sha1):
                 os.mkdir(build_directory)
                 with cwd(build_directory):
                     clone_repositories(server, config, sha1)
-                    code, out = capture2(case['exe'], shell=True)
+                    code, out = _system(case['exe'])
                     results[subbuild] = {
                         'exit': code,
                         'agent': case['agent'],
                         'exe': case['exe'],
                         'out': out,
                     }
-                    print(out) # ??
             else:
                 pass
                 # TODO
@@ -214,9 +229,7 @@ def build(server, config, sha1):
                 m = re.search(r'\Acli:\s*(.*)', step)
                 cmd = m.group(1)
                 logger.debug(cmd)
-                code, out = capture2(cmd, shell=True)
-                logger.debug(code)
-                logger.debug(out)
+                code, out = _system(cmd)
                 if code != 0:
                     exit(code)
 
@@ -255,18 +268,15 @@ def update_central_repos(config, server):
             cmd_list = [git, 'clone', repo['url'], repo_local_name]
             logger.debug(' '.join(cmd_list))
             with cwd(server['root']):
-                code, out = capture2(cmd_list)
-            logger.debug("{} {}".format(code, out))
-                # get current sha ?? In which branch?
+                code, out = _system(cmd_list)
+            # get current sha ?? In which branch?
             old_branches = {}
         else:
             logger.debug("update repository")
             old_branches = get_branches(local_repo_path)
             cmd_list = [git, 'pull']
-            logger.debug(' '.join(cmd_list))
             with cwd(local_repo_path):
-                code, out = capture2(cmd_list)
-            logger.debug("{} {}".format(code, out))
+                code, out = _system(cmd_list)
         new_branches = get_branches(local_repo_path)
         #logger.debug(yaml.dump(new_branches))
     return old_branches, new_branches
