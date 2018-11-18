@@ -138,17 +138,38 @@ def main():
         build(server, config, new_branches[args.branch])
         return
 
-
+    builds = []
     for branch in sorted(new_branches.keys()):
+
         if branch in old_branches:
             if old_branches[branch] == new_branches[branch]:
                 pass
             else:
                 logger.debug("Branch {} changed.".format(branch))
-                build(server, config, new_branches[branch])
+                builds.append( build(server, config, new_branches[branch]) )
         else:
             logger.debug("New branch seen: {}".format(branch))
-            build(server, config, new_branches[branch])
+            builds.append( build(server, config, new_branches[branch]) )
+
+    # Once all the builds have finished we need to collect the success/failure data
+    failures = 0
+    logger.debug("Number of builds: {}".format(len(builds)))
+    for build_number in builds:
+        build_parent_directory = os.path.join(server['workdir'], str(build_number))
+        results_file = os.path.join(build_parent_directory, 'results.json')
+        logger.debug("results file: {}".format(results_file))
+        if not os.path.exists(results_file):
+            failures += 1
+            continue
+        with open(results_file) as fh:
+            results = json.load(fh)
+        if not 'status' in results:
+            failures += 1
+            continue
+        if results['status'] != 'success':
+            failures += 1
+    logger.debug("Number of failures: {}".format(failures))
+    exit(failures)
 
 def get_next_build_number(server):
     counter_file = os.path.join(server['root'], 'counter.txt')
@@ -195,15 +216,21 @@ def build(server, config, sha1):
     bg = add_build_logger(build_parent_directory)
     logger.debug("Starting Build {} in directory: {}".format(build_number, build_parent_directory))
 
-
+    results = {'status': 'success'}
     if 'matrix' in config:
+        results['matrix'] = {}
         subbuild = 0
-        results = {}
         for case in config['matrix']:
             subbuild += 1
             logger.debug("On agent '{}' schedule exe: '{}'".format(case['agent'], case['exe']))
             if case['agent'] not in server['agents']:
-                raise Exception("Agent '{}' is not available.".format(case['agent']))
+                results['status'] = 'failure'
+                results['matrix'][subbuild] = {
+                    'agent': case['agent'],
+                    'error': "Agent is not available.",
+                }
+                continue
+
             if case['agent'] == 'master':
                 # TODO use the limit to run in parallel
                 build_directory = os.path.join( build_parent_directory, str(subbuild) )
@@ -211,39 +238,51 @@ def build(server, config, sha1):
                 with cwd(build_directory):
                     clone_repositories(server, config, sha1)
                     code, out = _system(case['exe'])
-                    results[subbuild] = {
+                    results['matrix'][subbuild] = {
                         'exit': code,
                         'agent': case['agent'],
                         'exe': case['exe'],
                         'out': out,
                     }
+                    if code != 0:
+                        results['status'] = 'failure'
             else:
                 pass
+                results['status'] = 'failure'
                 # TODO
                 # ssh host
                 # scp our code, the configuration files (that are appropriate to that machine)
                 # clone the directories
                 # run the build
-        with open(os.path.join(build_parent_directory, 'results.json'), "w") as fh:
-            json.dump(results, fh)
-        return
+    else:
+        build_directory = build_parent_directory
+        with cwd(build_directory):
+            clone_repositories(server, config, sha1)
+            if 'steps' in config:
+                results['steps'] = []
+                logger.debug("Run the steps defined in the configuration")
+                for step in config['steps']:
+                    logger.debug(step)
+                    m = re.search(r'\Acli:\s*(.*)', step)
+                    cmd = m.group(1)
+                    logger.debug(cmd)
+                    code, out = _system(cmd)
+                    results['steps'].append({
+                        'exit': code,
+                        'agent': 'master',
+                        'out': out,
+                        'step': step,
+                    })
+                    if code != 0:
+                        results['status'] = 'failure'
+                        break
 
-    build_directory = build_parent_directory
-    with cwd(build_directory):
-        clone_repositories(server, config, sha1)
-        if 'steps' in config:
-            logger.debug("Run the steps defined in the configuration")
-            for step in config['steps']:
-                logger.debug(step)
-                m = re.search(r'\Acli:\s*(.*)', step)
-                cmd = m.group(1)
-                logger.debug(cmd)
-                code, out = _system(cmd)
-                if code != 0:
-                    exit(code)
-
+    with open(os.path.join(build_parent_directory, 'results.json'), "w") as fh:
+        #json.dump(results, fh)
+        json.dump(results, fh, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
 
     logger.removeHandler(bg)
+    return build_number
 
 def get_repo_local_name(repo):
     m = re.search(r'/([^/]*?)(\.git)?\Z', repo['url'])

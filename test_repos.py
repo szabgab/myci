@@ -85,7 +85,7 @@ class TestRepo(object):
             _system("git push")
         code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
         print(out)
-        assert code == 13, "test failure repored"
+        assert code == 1, "One test failure repored"
         #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
         assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['selftest.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
@@ -148,7 +148,7 @@ if sys.argv[1] == "crash":
             _system("git push")
         code, out = capture2("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug), shell=True)
         print(out)
-        assert code == 0, "test success"
+        assert code == 1, "some tests failed in the matrix"
         #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
         assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/1', 'repo0/'))
@@ -159,18 +159,21 @@ if sys.argv[1] == "crash":
         assert os.path.exists( results_file )
         with open(results_file) as fh:
             results = json.load(fh)
-            #print(results)
-        last = results.pop('4')
+        last = results['matrix'].pop('4')
         assert results == {
-            '1': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Foo', 'out': 'hello Foo\n'},
-            '2': {'exit': 1, 'agent': 'master', 'exe': 'python repo0/code.py', 'out': 'Missing parameter\n'},
-            '3': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'}
+            'status': 'failure',
+            'matrix': {
+                '1': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Foo', 'out': 'hello Foo\n'},
+                '2': {'exit': 1, 'agent': 'master', 'exe': 'python repo0/code.py', 'out': 'Missing parameter\n'},
+                '3': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'},
+            },
         }
         assert last == {
             'exit': 1,
             'agent': 'master',
             'exe': 'python repo0/code.py crash',
-            'out': 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n'}
+            'out': 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n    print(42/v)\nZeroDivisionError: division by zero\n'
+        }
 
     def test_repos(self, tmpdir):
         temp_dir = str(tmpdir)
@@ -210,6 +213,11 @@ if sys.argv[1] == "crash":
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['selftest.py', '.git']
 
+        # results_file = os.path.join(self.workdir, '1/results.json')
+        # assert os.path.exists( results_file )
+        # with open(results_file) as fh:
+        #     results = json.load(fh)
+        #     #print(results)
 
         # check if the sha change was noticed git rev-parse HEAD
 
