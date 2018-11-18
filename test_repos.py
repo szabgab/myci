@@ -1,8 +1,7 @@
 from mytools import cwd, capture2
-import yaml
+import json
 import os
-
-#import check
+import yaml
 
 debug = ''
 if os.environ.get('DEBUG'):
@@ -143,7 +142,16 @@ print("hello " + sys.argv[1])
         assert os.listdir(os.path.join(self.workdir, '1/1', 'repo0/')) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/2', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1/2', 'repo0/')) == ['code.py', '.git']
-        assert os.path.exists( os.path.join(self.workdir, '1/results.json') )
+        results_file = os.path.join(self.workdir, '1/results.json')
+        assert os.path.exists( results_file )
+        with open(results_file) as fh:
+            results = json.load(fh)
+            #print(results)
+        assert results == {
+            '1': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Foo', 'out': 'hello Foo\n'},
+            '2': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'}
+        }
+
 
 
     def setup_repos(self, temp_dir, user_config, count):
