@@ -5,6 +5,8 @@ Some CI system
 
 ## TODO
 
+* Include the commit messages of the respective sha1 values in both the log file and the reporting json
+
 * Send notifications
 * Create a web application to show the build directory
 * Save artifacts

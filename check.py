@@ -69,6 +69,7 @@ def main():
     parser.add_argument('--server', help="Server config file", required=True)
     parser.add_argument('--config', help="Config file", required=True)
     parser.add_argument('--debug', help="Turn on debugging", action="store_true")
+    parser.add_argument('--current', help="Run the current commit of the given branch of the main repository. (No new changes incorporated)")
     args = parser.parse_args()
 
     if args.debug:
@@ -84,6 +85,21 @@ def main():
     logger.debug(args.config)
     with open(args.config) as fh:
         config = yaml.load(fh)
+
+    if args.current:
+        repo = config['repos'][0]
+        repo_local_name = get_repo_local_name(repo)
+        local_repo_path = os.path.join(server['root'], repo_local_name)
+        branches = get_branches(local_repo_path)
+
+        if args.current in branches:
+            logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
+            build(server, config, branches[args.current])
+        else:
+            branch_names = ', '.join(sorted(branches.keys()))
+            raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(args.current, repo['name'], branch_names))
+        return
+
 
     old_branches, new_branches = update_central_repos(config, server)
 
