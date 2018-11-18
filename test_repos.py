@@ -117,6 +117,10 @@ class TestRepo(object):
                     },
                     {
                         'agent': 'master',
+                        'exe': 'python repo0/code.py',
+                    },
+                    {
+                        'agent': 'master',
                         'exe': 'python repo0/code.py Bar',
                     },
                 ]
@@ -127,6 +131,8 @@ class TestRepo(object):
             with open('code.py', 'w') as fh:
                 fh.write("""
 import sys
+if len(sys.argv) < 2:
+    exit("Missing parameter")
 print("hello " + sys.argv[1])
 """)
 
@@ -149,7 +155,8 @@ print("hello " + sys.argv[1])
             #print(results)
         assert results == {
             '1': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Foo', 'out': 'hello Foo\n'},
-            '2': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'}
+            '2': {'agent': 'master', 'exe': 'python repo0/code.py', 'exit': 1, 'out': 'Missing parameter\n'},
+            '3': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'}
         }
 
 
