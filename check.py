@@ -1,12 +1,12 @@
 import argparse
 import datetime
+import fcntl
 import json
 import yaml
 import logging
-import re
 import os
-import fcntl
-#import subprocess
+import re
+import shlex
 from mytools import cwd, capture2
 
 git = 'git'
@@ -15,15 +15,16 @@ def _system(cmd):
     logger = logging.getLogger(__name__)
 
     if type(cmd).__name__ == 'list':
+        cmd_list = cmd
         logger.debug(' '.join(cmd))
-        code, out = capture2(cmd)
     elif type(cmd).__name__ == 'str':
+        cmd_list = shlex.split(cmd)
         logger.debug(cmd)
-        code, out = capture2(cmd, shell = True)
     else:
         raise Exception("Invalid paramerer type: " + type(cmd).__name__)
 
-    logger.debug(code)
+    code, out = capture2(cmd_list)
+    logger.debug("Exit code {}".format(code))
     logger.debug(out)
     return code, out
 
