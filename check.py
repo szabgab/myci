@@ -79,97 +79,6 @@ def get_branches(path):
 
 
 
-def main():
-    setup_logger()
-    logger = logging.getLogger(__name__)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--server', help="Server config file", required=True)
-    parser.add_argument('--config', help="Config file", required=True)
-    parser.add_argument('--debug', help="Turn on debugging", action="store_true")
-    parser.add_argument('--current', help="Run the current commit of the given branch of the main repository. (No new changes incorporated)")
-    parser.add_argument('--branch', help="Update all the repositories and then run this branch.")
-    args = parser.parse_args()
-
-    if args.debug:
-        add_logger()
-
-    logger.debug("debug")
-
-    logger.debug(args.server)
-    with open(args.server) as fh:
-        server = yaml.load(fh)
-
-
-    logger.debug(args.config)
-    with open(args.config) as fh:
-        config = yaml.load(fh)
-
-    if args.current:
-        repo = config['repos'][0]
-        repo_local_name = get_repo_local_name(repo)
-        local_repo_path = os.path.join(server['root'], repo_local_name)
-        branches = get_branches(local_repo_path)
-
-        if args.current in branches:
-            logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
-            build(server, config, branches[args.current])
-        else:
-            branch_names = ', '.join(sorted(branches.keys()))
-            raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(args.current, repo['name'], branch_names))
-        return
-
-
-    old_branches, new_branches = update_central_repos(config, server)
-
-    # For each watched(!) repo get a list of branches and the sha for each branch before and after the update.
-    # If each repo can have multiple branches then shall we really build all the combinations or should there be
-    # a leading repository
-    # I think we need to assume that one of the repositories is under test and the others have fixed branches
-    # TODO If sha changed
-    # TODO If branch disappeared
-    # TODO If new branch appeared
-
-    if args.branch:
-        if args.branch not in new_branches:
-            raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
-
-        logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
-        build(server, config, new_branches[args.branch])
-        return
-
-    builds = []
-    for branch in sorted(new_branches.keys()):
-
-        if branch in old_branches:
-            if old_branches[branch] == new_branches[branch]:
-                pass
-            else:
-                logger.debug("Branch {} changed.".format(branch))
-                builds.append( build(server, config, new_branches[branch]) )
-        else:
-            logger.debug("New branch seen: {}".format(branch))
-            builds.append( build(server, config, new_branches[branch]) )
-
-    # Once all the builds have finished we need to collect the success/failure data
-    failures = 0
-    logger.debug("Number of builds: {}".format(len(builds)))
-    for build_number in builds:
-        build_parent_directory = os.path.join(server['workdir'], str(build_number))
-        results_file = os.path.join(build_parent_directory, 'results.json')
-        logger.debug("results file: {}".format(results_file))
-        if not os.path.exists(results_file):
-            failures += 1
-            continue
-        with open(results_file) as fh:
-            results = json.load(fh)
-        if not 'status' in results:
-            failures += 1
-            continue
-        if results['status'] != 'success':
-            failures += 1
-    logger.debug("Number of failures: {}".format(failures))
-    exit(failures)
 
 def get_next_build_number(server):
     counter_file = os.path.join(server['root'], 'counter.txt')
@@ -334,6 +243,97 @@ def update_central_repos(config, server):
         #logger.debug(yaml.dump(new_branches))
     return old_branches, new_branches
 
+def main():
+    setup_logger()
+    logger = logging.getLogger(__name__)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--server', help="Server config file", required=True)
+    parser.add_argument('--config', help="Config file", required=True)
+    parser.add_argument('--debug', help="Turn on debugging", action="store_true")
+    parser.add_argument('--current', help="Run the current commit of the given branch of the main repository. (No new changes incorporated)")
+    parser.add_argument('--branch', help="Update all the repositories and then run this branch.")
+    args = parser.parse_args()
+
+    if args.debug:
+        add_logger()
+
+    logger.debug("debug")
+
+    logger.debug(args.server)
+    with open(args.server) as fh:
+        server = yaml.load(fh)
+
+
+    logger.debug(args.config)
+    with open(args.config) as fh:
+        config = yaml.load(fh)
+
+    if args.current:
+        repo = config['repos'][0]
+        repo_local_name = get_repo_local_name(repo)
+        local_repo_path = os.path.join(server['root'], repo_local_name)
+        branches = get_branches(local_repo_path)
+
+        if args.current in branches:
+            logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
+            build(server, config, branches[args.current])
+        else:
+            branch_names = ', '.join(sorted(branches.keys()))
+            raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(args.current, repo['name'], branch_names))
+        return
+
+
+    old_branches, new_branches = update_central_repos(config, server)
+
+    # For each watched(!) repo get a list of branches and the sha for each branch before and after the update.
+    # If each repo can have multiple branches then shall we really build all the combinations or should there be
+    # a leading repository
+    # I think we need to assume that one of the repositories is under test and the others have fixed branches
+    # TODO If sha changed
+    # TODO If branch disappeared
+    # TODO If new branch appeared
+
+    if args.branch:
+        if args.branch not in new_branches:
+            raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
+
+        logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
+        build(server, config, new_branches[args.branch])
+        return
+
+    builds = []
+    for branch in sorted(new_branches.keys()):
+
+        if branch in old_branches:
+            if old_branches[branch] == new_branches[branch]:
+                pass
+            else:
+                logger.debug("Branch {} changed.".format(branch))
+                builds.append( build(server, config, new_branches[branch]) )
+        else:
+            logger.debug("New branch seen: {}".format(branch))
+            builds.append( build(server, config, new_branches[branch]) )
+
+    # Once all the builds have finished we need to collect the success/failure data
+    failures = 0
+    logger.debug("Number of builds: {}".format(len(builds)))
+    for build_number in builds:
+        build_parent_directory = os.path.join(server['workdir'], str(build_number))
+        results_file = os.path.join(build_parent_directory, 'results.json')
+        logger.debug("results file: {}".format(results_file))
+        if not os.path.exists(results_file):
+            failures += 1
+            continue
+        with open(results_file) as fh:
+            results = json.load(fh)
+        if not 'status' in results:
+            failures += 1
+            continue
+        if results['status'] != 'success':
+            failures += 1
+    logger.debug("Number of failures: {}".format(failures))
+    exit(failures)
 
 if __name__ == '__main__':
     main()
