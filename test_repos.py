@@ -123,7 +123,11 @@ class TestRepo(object):
                         'agent': 'master',
                         'exe': 'python repo0/code.py Bar',
                     },
-                ]
+                    {
+                        'agent': 'master',
+                        'exe': 'python repo0/code.py crash',
+                    },
+            ]
         }, 1)
 
         # update the repository
@@ -134,6 +138,9 @@ import sys
 if len(sys.argv) < 2:
     exit("Missing parameter")
 print("hello " + sys.argv[1])
+if sys.argv[1] == "crash":
+    v = 0
+    print(42/v)
 """)
 
             _system("git add .")
@@ -153,11 +160,17 @@ print("hello " + sys.argv[1])
         with open(results_file) as fh:
             results = json.load(fh)
             #print(results)
+        last = results.pop('4')
         assert results == {
             '1': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Foo', 'out': 'hello Foo\n'},
-            '2': {'agent': 'master', 'exe': 'python repo0/code.py', 'exit': 1, 'out': 'Missing parameter\n'},
+            '2': {'exit': 1, 'agent': 'master', 'exe': 'python repo0/code.py', 'out': 'Missing parameter\n'},
             '3': {'exit': 0, 'agent': 'master', 'exe': 'python repo0/code.py Bar', 'out': 'hello Bar\n'}
         }
+        assert last == {
+            'exit': 1,
+            'agent': 'master',
+            'exe': 'python repo0/code.py crash',
+            'out': 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n'}
 
 
 
