@@ -172,10 +172,14 @@ def clone_repositories(server, config, sha1):
     logger.debug("Clone the repositories")
     for repo in config['repos']:
         repo_local_name = get_repo_local_name(repo)
-        _system([git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name])
+        code, out = _system([git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name])
+        if code != 0:
+            raise Exception("Could not clone repo")
         with cwd(repo_local_name):
             logger.debug("Check out the given shas")
-            _system([git, 'checkout', sha1])
+            code, out = _system([git, 'checkout', sha1])
+            if code != 0:
+                raise Exception("Could not checkout sha1")
 
 def build(server, config, sha1):
     logger = logging.getLogger(__name__)

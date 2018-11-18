@@ -172,6 +172,47 @@ if sys.argv[1] == "crash":
             'exe': 'python repo0/code.py crash',
             'out': 'hello crash\nTraceback (most recent call last):\n  File "repo0/code.py", line 8, in <module>\n'}
 
+    def test_repos(self, tmpdir):
+        temp_dir = str(tmpdir)
+        print(temp_dir)
+        self.setup_repos(temp_dir, {}, 2)
+
+        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
+        assert os.path.exists( os.path.join(self.repos_parent, 'repo0') )
+        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['.git']
+        assert not os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
+
+        assert os.path.exists( os.path.join(self.repos_parent, 'repo1') )
+        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['.git']
+        assert not os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
+
+        # update the repository
+        with cwd(self.client[0]):
+            with open('README.txt', 'w') as fh:
+                fh.write("first line\n")
+            _system("git add .")
+            _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
+            _system("git push")
+
+        with cwd(self.client[1]):
+            with open('selftest.py', 'w') as fh:
+                fh.write("assert True\n")
+            _system("git add .")
+            _system("git commit -m 'start with test' --author 'Zee No <zee@no.com>'")
+            _system("git push")
+
+        _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
+        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['README.txt', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
+        assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['README.txt', '.git']
+
+        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['selftest.py', '.git']
+        assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
+        assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['selftest.py', '.git']
+
+
+        # check if the sha change was noticed git rev-parse HEAD
+
 
 
     def setup_repos(self, temp_dir, user_config, count):
