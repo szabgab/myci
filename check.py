@@ -135,7 +135,7 @@ def main():
             raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
 
         logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
-        build(server, config, new.branches[args.branch])
+        build(server, config, new_branches[args.branch])
         return
 
 
