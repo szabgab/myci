@@ -246,7 +246,11 @@ class CI(object):
                 branches = self.get_branches(local_repo_path)
                 shas[repo['name']] = branches[ repo['branch'] ]
             #logger.debug(yaml.dump(new_branches))
-        return old_branches, new_branches, shas
+
+        self.old_branches = old_branches
+        self.new_branches = new_branches
+        self.shas = shas
+        return
 
     def failures(self, builds, server):
         logger = logging.getLogger(__name__)
@@ -312,7 +316,7 @@ class CI(object):
             return
 
 
-        old_branches, new_branches, shas = self.update_central_repos(config, server)
+        self.update_central_repos(config, server)
 
         # For each watched(!) repo get a list of branches and the sha for each branch before and after the update.
         # If each repo can have multiple branches then shall we really build all the combinations or should there be
@@ -325,28 +329,28 @@ class CI(object):
         main_repo_name = config['repos'][0]['name']
 
         if args.branch:
-            if args.branch not in new_branches:
+            if args.branch not in self.new_branches:
                 raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
 
-            logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
-            shas[ main_repo_name ] = new_branches[args.branch]
-            self.build(server, config, shas)
+            logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, self.new_branches[args.branch]))
+            self.shas[ main_repo_name ] = self.new_branches[args.branch]
+            self.build(server, config, self.shas)
             return
 
         builds = []
-        for branch in sorted(new_branches.keys()):
+        for branch in sorted(self.new_branches.keys()):
 
-            if branch in old_branches:
-                if old_branches[branch] == new_branches[branch]:
+            if branch in self.old_branches:
+                if self.old_branches[branch] == self.new_branches[branch]:
                     pass
                 else:
                     logger.debug("Branch {} changed.".format(branch))
-                    shas[main_repo_name] = new_branches[branch]
-                    builds.append( self.build(server, config, shas) )
+                    self.shas[main_repo_name] = self.new_branches[branch]
+                    builds.append( self.build(server, config, self.shas) )
             else:
                 logger.debug("New branch seen: {}".format(branch))
-                shas[main_repo_name] = new_branches[branch]
-                builds.append( self.build(server, config, shas) )
+                self.shas[main_repo_name] = self.new_branches[branch]
+                builds.append( self.build(server, config, self.shas) )
 
         exit( self.failures(builds, server) )
 
