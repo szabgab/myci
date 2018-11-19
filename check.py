@@ -285,29 +285,29 @@ class CI(object):
         parser.add_argument('--debug', help="Turn on debugging", action="store_true")
         parser.add_argument('--current', help="Run the current commit of the given branch of the main repository. (No new changes incorporated)")
         parser.add_argument('--branch', help="Update all the repositories and then run this branch.")
-        args = parser.parse_args()
+        self.args = parser.parse_args()
 
-        if args.debug:
+        if self.args.debug:
             self.add_logger()
 
         logger.debug("debug")
 
-        logger.debug(args.server)
-        with open(args.server) as fh:
+        logger.debug(self.args.server)
+        with open(self.args.server) as fh:
             server = yaml.load(fh)
 
 
-        logger.debug(args.config)
-        with open(args.config) as fh:
+        logger.debug(self.args.config)
+        with open(self.args.config) as fh:
             config = yaml.load(fh)
 
-        if args.current:
+        if self.args.current:
             repo = config['repos'][0]
             repo_local_name = self.get_repo_local_name(repo)
             local_repo_path = os.path.join(server['repositories'], repo_local_name)
             branches = self.get_branches(local_repo_path)
 
-            if args.current in branches:
+            if self.args.current in branches:
                 logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
                 self.build(server, config, branches[args.current])
             else:
@@ -328,8 +328,8 @@ class CI(object):
 
         main_repo_name = config['repos'][0]['name']
 
-        if args.branch:
-            if args.branch not in self.new_branches:
+        if self.args.branch:
+            if self.args.branch not in self.new_branches:
                 raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
 
             logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, self.new_branches[args.branch]))
