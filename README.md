@@ -5,6 +5,9 @@ Some CI system
 
 ## TODO
 
+* Move the results.json to the db directory and call it id.json
+* Base the web application on the db directory 
+
 * Include the commit messages of the respective sha1 values in both the log file and the reporting json
 
 * Send notifications

@@ -186,7 +186,7 @@ class CI(object):
                             results['status'] = 'failure'
                             break
 
-        with open(os.path.join(build_parent_directory, 'results.json'), "w") as fh:
+        with open(os.path.join(server['db'], str(build_number) + '.json'), "w") as fh:
             #json.dump(results, fh)
             json.dump(results, fh, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
 
@@ -320,7 +320,7 @@ class CI(object):
         logger.debug("Number of builds: {}".format(len(builds)))
         for build_number in builds:
             build_parent_directory = os.path.join(server['workdir'], str(build_number))
-            results_file = os.path.join(build_parent_directory, 'results.json')
+            results_file = os.path.join(server['db'], str(build_number) + '.json')
             logger.debug("results file: {}".format(results_file))
             if not os.path.exists(results_file):
                 failures += 1

@@ -155,7 +155,7 @@ if sys.argv[1] == "crash":
         assert os.listdir(os.path.join(self.workdir, '1/1', 'repo0/')) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/2', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1/2', 'repo0/')) == ['code.py', '.git']
-        results_file = os.path.join(self.workdir, '1/results.json')
+        results_file = os.path.join(self.db, '1.json')
         assert os.path.exists( results_file )
         with open(results_file) as fh:
             results = json.load(fh)
@@ -217,7 +217,7 @@ if sys.argv[1] == "crash":
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['selftest.py', '.git']
 
-        # results_file = os.path.join(self.workdir, '1/results.json')
+        # results_file = os.path.join(self.db, '1.json')
         # assert os.path.exists( results_file )
         # with open(results_file) as fh:
         #     results = json.load(fh)
