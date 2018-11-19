@@ -109,7 +109,7 @@ class CI(object):
                 logger.debug("Check out the given shas")
                 code, out = _system([git, 'checkout', sha1])
                 if code != 0:
-                    raise Exception("Could not checkout sha1")
+                    raise Exception("Could not checkout sha1 {} in repository {}".format(sha1, repo_local_name))
 
     def build(self, server, config, sha1):
         logger = logging.getLogger(__name__)

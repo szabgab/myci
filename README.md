@@ -10,6 +10,7 @@ Some CI system
 * Shall we create the directories listed in the server config file or shall we expect the user to create them? What right should they have? 
     - repositories
     - db
+    - build_parent
 
 * Include the commit messages of the respective sha1 values in both the log file and the reporting json
 
