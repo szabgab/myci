@@ -1,2 +1,3 @@
-root: /home/gabor/work/repos_parent/
-workdir: /home/gabor/work/build_parent/
+repositories: /home/gabor/work/repos_dir/repositories/
+workdir: /home/gabor/work/repos_dir/build_parent/
+artifacts: /home/gabor/work/repos_dir/artifacts/

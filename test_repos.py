@@ -19,8 +19,8 @@ class TestRepo(object):
         self.setup_repos(temp_dir, {}, 1)
 
         _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
-        assert os.path.exists( os.path.join(self.repos_parent, 'repo0') )
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['.git']
+        assert os.path.exists( os.path.join(self.repositories, 'repo0') )
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['.git']
         assert not os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
 
         # update the repository
@@ -31,7 +31,7 @@ class TestRepo(object):
             _system("git commit -m 'first' --author 'Foo Bar <foo@bar.com>'")
             _system("git push")
         _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['README.txt', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['README.txt', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['README.txt', '.git']
         # check if the sha change was noticed git rev-parse HEAD
@@ -87,7 +87,7 @@ class TestRepo(object):
         print(out)
         assert code == 1, "One test failure repored"
         #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['selftest.py', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['selftest.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['selftest.py', '.git']
 
@@ -102,7 +102,7 @@ class TestRepo(object):
         print(out)
         assert code == 0, "test sucess repored: "
         #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['selftest.py', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['selftest.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '2', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '2', 'repo0/')) == ['selftest.py', '.git']
 
@@ -150,7 +150,7 @@ if sys.argv[1] == "crash":
         print(out)
         assert code == 1, "some tests failed in the matrix"
         #assert out == "" # TODO: this will fail if --debug is on, but also becaues there is some output from the git commands.
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['code.py', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/1', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1/1', 'repo0/')) == ['code.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1/2', 'repo0/'))
@@ -185,12 +185,12 @@ if sys.argv[1] == "crash":
         self.setup_repos(temp_dir, {}, 2)
 
         _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
-        assert os.path.exists( os.path.join(self.repos_parent, 'repo0') )
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['.git']
+        assert os.path.exists( os.path.join(self.repositories, 'repo0') )
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['.git']
         assert not os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
 
-        assert os.path.exists( os.path.join(self.repos_parent, 'repo1') )
-        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['.git']
+        assert os.path.exists( os.path.join(self.repositories, 'repo1') )
+        assert os.listdir( os.path.join(self.repositories, 'repo1/') ) == ['.git']
         assert not os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
 
         # update the repository
@@ -209,11 +209,11 @@ if sys.argv[1] == "crash":
             _system("git push")
 
         _system("python check.py --server {} --config {} {}".format(self.server_file, self.config_file, debug))
-        assert os.listdir( os.path.join(self.repos_parent, 'repo0/') ) == ['README.txt', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo0/') ) == ['README.txt', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo0/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo0/')) == ['README.txt', '.git']
 
-        assert os.listdir( os.path.join(self.repos_parent, 'repo1/') ) == ['selftest.py', '.git']
+        assert os.listdir( os.path.join(self.repositories, 'repo1/') ) == ['selftest.py', '.git']
         assert os.path.exists(os.path.join(self.workdir, '1', 'repo1/'))
         assert os.listdir(os.path.join(self.workdir, '1', 'repo1/')) == ['selftest.py', '.git']
 
@@ -233,7 +233,7 @@ if sys.argv[1] == "crash":
         root = os.path.join(temp_dir, 'server')
         self.server_file = os.path.join(root, 'server.yml')
         self.config_file = os.path.join(root, 'config.yml')  # this might be in a repository
-        self.repos_parent = os.path.join(root, 'repos_parent')  # here is where we'll clone repos
+        self.repositories = os.path.join(root, 'repositories')  # here is where we'll clone repos
         self.workdir = os.path.join(root, 'workdir')
 
         self.repo = []
@@ -244,11 +244,11 @@ if sys.argv[1] == "crash":
         os.mkdir(remote_repos)
         os.mkdir(client_dir)
         os.mkdir(root)
-        os.mkdir(self.repos_parent)
+        os.mkdir(self.repositories)
         os.mkdir(self.workdir)
         # create config files
         server_config = {
-            'root': self.repos_parent,
+            'repositories': self.repositories,
             'workdir': self.workdir,
             'agents' : {
                 'master' : {

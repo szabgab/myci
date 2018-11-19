@@ -81,7 +81,7 @@ class CI(object):
 
 
     def get_next_build_number(self, server):
-        counter_file = os.path.join(server['root'], 'counter.txt')
+        counter_file = os.path.join(server['repositories'], 'counter.txt')
         if os.path.exists(counter_file):
             with open(counter_file, 'r+') as fh:
                 fcntl.lockf(fh, fcntl.LOCK_EX)
@@ -102,7 +102,7 @@ class CI(object):
         logger.debug("Clone the repositories")
         for repo in config['repos']:
             repo_local_name = self.get_repo_local_name(repo)
-            code, out = _system([git, 'clone', os.path.join(server['root'], repo_local_name), repo_local_name])
+            code, out = _system([git, 'clone', os.path.join(server['repositories'], repo_local_name), repo_local_name])
             if code != 0:
                 raise Exception("Could not clone repo")
             with cwd(repo_local_name):
@@ -216,7 +216,7 @@ class CI(object):
             logger.debug("Local repo dir {}".format(repo_local_name))
             # TODO have a root directory for each project that is under the server root
             # TODO allow the user to supply a local directory
-            local_repo_path = os.path.join(server['root'], repo_local_name)
+            local_repo_path = os.path.join(server['repositories'], repo_local_name)
             logger.debug("Local repo path {}".format(local_repo_path))
 
             if not os.path.exists(local_repo_path):
@@ -225,7 +225,7 @@ class CI(object):
                     os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
                 cmd_list = [git, 'clone', repo['url'], repo_local_name]
                 logger.debug(' '.join(cmd_list))
-                with cwd(server['root']):
+                with cwd(server['repositories']):
                     code, out = _system(cmd_list)
                 # get current sha ?? In which branch?
                 if first:
@@ -272,7 +272,7 @@ class CI(object):
         if args.current:
             repo = config['repos'][0]
             repo_local_name = self.get_repo_local_name(repo)
-            local_repo_path = os.path.join(server['root'], repo_local_name)
+            local_repo_path = os.path.join(server['repositories'], repo_local_name)
             branches = self.get_branches(local_repo_path)
 
             if args.current in branches:
