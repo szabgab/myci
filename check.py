@@ -333,11 +333,11 @@ class CI(object):
             branches = self.get_branches(local_repo_path)
 
             if self.args.current in branches:
-                logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
-                self.build(self.server, branches[args.current])
+                logger.debug("Branch {} is being built at sha1 {}.".format(self.args.current, branches[self.args.current]))
+                self.build(self.server, branches[self.args.current])
             else:
                 branch_names = ', '.join(sorted(branches.keys()))
-                raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(args.current, repo['name'], branch_names))
+                raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(self.args.current, repo['name'], branch_names))
             return
 
 
