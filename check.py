@@ -250,12 +250,12 @@ class CI(object):
         self.new_branches = new_branches
         return
 
-    def failures(self, builds):
+    def failures(self):
         logger = logging.getLogger(__name__)
         # Once all the builds have finished we need to collect the success/failure data
         failures = 0
-        logger.debug("Number of builds: {}".format(len(builds)))
-        for build_number in builds:
+        logger.debug("Number of builds: {}".format(len(self.builds)))
+        for build_number in self.builds:
             build_parent_directory = os.path.join(self.server['workdir'], str(build_number))
             results_file = os.path.join(self.server['db'], str(build_number) + '.json')
             logger.debug("results file: {}".format(results_file))
@@ -271,6 +271,33 @@ class CI(object):
                 failures += 1
         logger.debug("Number of failures: {}".format(failures))
         return failures
+
+    def build_all(self):
+        logger = logging.getLogger(__name__)
+        self.builds = []
+        main_repo_name = self.config['repos'][0]['name']
+
+        if self.args.branch:
+            if self.args.branch not in self.new_branches:
+                raise Exception("Branch {} not available (any more?, yet?)".format(self.args.branch))
+
+            logger.debug("Branch {} is being built at sha1 {}.".format(self.args.branch, self.new_branches[self.args.branch]))
+            self.shas[ main_repo_name ] = self.new_branches[self.args.branch]
+            self.builds.append( self.build() )
+            return
+
+        for branch in sorted(self.new_branches.keys()):
+            if branch in self.old_branches:
+                if self.old_branches[branch] == self.new_branches[branch]:
+                    pass
+                else:
+                    logger.debug("Branch {} changed.".format(branch))
+                    self.shas[main_repo_name] = self.new_branches[branch]
+                    self.builds.append( self.build() )
+            else:
+                logger.debug("New branch seen: {}".format(branch))
+                self.shas[main_repo_name] = self.new_branches[branch]
+                self.builds.append( self.build() )
 
 
     def main(self):
@@ -324,33 +351,9 @@ class CI(object):
         # TODO If branch disappeared
         # TODO If new branch appeared
 
-        main_repo_name = self.config['repos'][0]['name']
 
-        if self.args.branch:
-            if self.args.branch not in self.new_branches:
-                raise Exception("Branch {} not available (any more?, yet?)".format(self.args.branch))
-
-            logger.debug("Branch {} is being built at sha1 {}.".format(self.args.branch, self.new_branches[self.args.branch]))
-            self.shas[ main_repo_name ] = self.new_branches[self.args.branch]
-            self.build()
-            return
-
-        builds = []
-        for branch in sorted(self.new_branches.keys()):
-
-            if branch in self.old_branches:
-                if self.old_branches[branch] == self.new_branches[branch]:
-                    pass
-                else:
-                    logger.debug("Branch {} changed.".format(branch))
-                    self.shas[main_repo_name] = self.new_branches[branch]
-                    builds.append( self.build() )
-            else:
-                logger.debug("New branch seen: {}".format(branch))
-                self.shas[main_repo_name] = self.new_branches[branch]
-                builds.append( self.build() )
-
-        exit( self.failures(builds) )
+        self.build_all()
+        exit( self.failures() )
 
 
 if __name__ == '__main__':
