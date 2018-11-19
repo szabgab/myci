@@ -80,8 +80,8 @@ class CI(object):
 
 
 
-    def get_next_build_number(self, server):
-        counter_file = os.path.join(server['db'], 'counter.txt')
+    def get_next_build_number(self):
+        counter_file = os.path.join(self.server['db'], 'counter.txt')
         if os.path.exists(counter_file):
             with open(counter_file, 'r+') as fh:
                 fcntl.lockf(fh, fcntl.LOCK_EX)
@@ -96,14 +96,14 @@ class CI(object):
                 fh.write(str(count))
         return count
 
-    def clone_repositories(self, server, config, shas):
+    def clone_repositories(self, config, shas):
         logger = logging.getLogger(__name__)
 
         logger.debug("Clone the repositories")
         for repo in config['repos']:
             repo_name = repo['name']
             repo_local_name = self.get_repo_local_name(repo)
-            code, out = _system([git, 'clone', os.path.join(server['repositories'], repo_local_name), repo_local_name])
+            code, out = _system([git, 'clone', os.path.join(self.server['repositories'], repo_local_name), repo_local_name])
             if code != 0:
                 raise Exception("Could not clone repo")
             with cwd(repo_local_name):
@@ -112,14 +112,14 @@ class CI(object):
                 if code != 0:
                     raise Exception("Could not checkout sha1 {} in repository {}".format(sha1, repo_local_name))
 
-    def build(self, server, config, shas):
+    def build(self, config, shas):
         logger = logging.getLogger(__name__)
-        build_number = self.get_next_build_number(server)
+        build_number = self.get_next_build_number()
         logger.debug("Build number: {}".format(build_number))
         # TODO store the build in some queue and also allow the parallel execution of jobs on agents
 
         # update_local_repositories()
-        build_parent_directory = os.path.join(server['workdir'], str(build_number))
+        build_parent_directory = os.path.join(self.server['workdir'], str(build_number))
         logger.debug("Build parent dir: {}".format(build_parent_directory))
         os.mkdir(build_parent_directory)
 
@@ -133,7 +133,7 @@ class CI(object):
             for case in config['matrix']:
                 subbuild += 1
                 logger.debug("On agent '{}' schedule exe: '{}'".format(case['agent'], case['exe']))
-                if case['agent'] not in server['agents']:
+                if case['agent'] not in self.server['agents']:
                     results['status'] = 'failure'
                     results['matrix'][subbuild] = {
                         'agent': case['agent'],
@@ -146,7 +146,7 @@ class CI(object):
                     build_directory = os.path.join( build_parent_directory, str(subbuild) )
                     os.mkdir(build_directory)
                     with cwd(build_directory):
-                        self.clone_repositories(server, config, shas )
+                        self.clone_repositories(config, shas )
                         code, out = _system(case['exe'])
                         results['matrix'][subbuild] = {
                             'exit': code,
@@ -167,7 +167,7 @@ class CI(object):
         else:
             build_directory = build_parent_directory
             with cwd(build_directory):
-                self.clone_repositories(server, config, shas)
+                self.clone_repositories(config, shas)
                 if 'steps' in config:
                     results['steps'] = []
                     logger.debug("Run the steps defined in the configuration")
@@ -187,7 +187,7 @@ class CI(object):
                             results['status'] = 'failure'
                             break
 
-        with open(os.path.join(server['db'], str(build_number) + '.json'), "w") as fh:
+        with open(os.path.join(self.server['db'], str(build_number) + '.json'), "w") as fh:
             #json.dump(results, fh)
             json.dump(results, fh, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
 
@@ -200,7 +200,7 @@ class CI(object):
             raise Exception("Could not parse repo url '{}'".format(repo['url']))
         return m.group(1)
 
-    def update_central_repos(self, config, server):
+    def update_central_repos(self, config):
         logger = logging.getLogger(__name__)
 
         # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
@@ -218,7 +218,7 @@ class CI(object):
             logger.debug("Local repo dir {}".format(repo_local_name))
             # TODO have a root directory for each project that is under the server root
             # TODO allow the user to supply a local directory
-            local_repo_path = os.path.join(server['repositories'], repo_local_name)
+            local_repo_path = os.path.join(self.server['repositories'], repo_local_name)
             logger.debug("Local repo path {}".format(local_repo_path))
 
             if not os.path.exists(local_repo_path):
@@ -227,7 +227,7 @@ class CI(object):
                     os.environ['GIT_SSH_COMMAND'] = "ssh -i  " + repo['credentials']
                 cmd_list = [git, 'clone', repo['url'], repo_local_name]
                 logger.debug(' '.join(cmd_list))
-                with cwd(server['repositories']):
+                with cwd(self.server['repositories']):
                     code, out = _system(cmd_list)
                 # get current sha ?? In which branch?
                 if first:
@@ -252,14 +252,14 @@ class CI(object):
         self.shas = shas
         return
 
-    def failures(self, builds, server):
+    def failures(self, builds):
         logger = logging.getLogger(__name__)
         # Once all the builds have finished we need to collect the success/failure data
         failures = 0
         logger.debug("Number of builds: {}".format(len(builds)))
         for build_number in builds:
-            build_parent_directory = os.path.join(server['workdir'], str(build_number))
-            results_file = os.path.join(server['db'], str(build_number) + '.json')
+            build_parent_directory = os.path.join(self.server['workdir'], str(build_number))
+            results_file = os.path.join(self.server['db'], str(build_number) + '.json')
             logger.debug("results file: {}".format(results_file))
             if not os.path.exists(results_file):
                 failures += 1
@@ -294,7 +294,7 @@ class CI(object):
 
         logger.debug(self.args.server)
         with open(self.args.server) as fh:
-            server = yaml.load(fh)
+            self.server = yaml.load(fh)
 
 
         logger.debug(self.args.config)
@@ -304,19 +304,19 @@ class CI(object):
         if self.args.current:
             repo = config['repos'][0]
             repo_local_name = self.get_repo_local_name(repo)
-            local_repo_path = os.path.join(server['repositories'], repo_local_name)
+            local_repo_path = os.path.join(self.server['repositories'], repo_local_name)
             branches = self.get_branches(local_repo_path)
 
             if self.args.current in branches:
                 logger.debug("Branch {} is being built at sha1 {}.".format(args.current, branches[args.current]))
-                self.build(server, config, branches[args.current])
+                self.build(self.server, config, branches[args.current])
             else:
                 branch_names = ', '.join(sorted(branches.keys()))
                 raise Exception("Barnch {} could not be found in repo {}. Available branches: {}".format(args.current, repo['name'], branch_names))
             return
 
 
-        self.update_central_repos(config, server)
+        self.update_central_repos(config)
 
         # For each watched(!) repo get a list of branches and the sha for each branch before and after the update.
         # If each repo can have multiple branches then shall we really build all the combinations or should there be
@@ -334,7 +334,7 @@ class CI(object):
 
             logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, self.new_branches[args.branch]))
             self.shas[ main_repo_name ] = self.new_branches[args.branch]
-            self.build(server, config, self.shas)
+            self.build(config, self.shas)
             return
 
         builds = []
@@ -346,13 +346,13 @@ class CI(object):
                 else:
                     logger.debug("Branch {} changed.".format(branch))
                     self.shas[main_repo_name] = self.new_branches[branch]
-                    builds.append( self.build(server, config, self.shas) )
+                    builds.append( self.build(config, self.shas) )
             else:
                 logger.debug("New branch seen: {}".format(branch))
                 self.shas[main_repo_name] = self.new_branches[branch]
-                builds.append( self.build(server, config, self.shas) )
+                builds.append( self.build(config, self.shas) )
 
-        exit( self.failures(builds, server) )
+        exit( self.failures(builds) )
 
 
 if __name__ == '__main__':
