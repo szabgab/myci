@@ -328,10 +328,10 @@ class CI(object):
 
         if self.args.branch:
             if self.args.branch not in self.new_branches:
-                raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
+                raise Exception("Branch {} not available (any more?, yet?)".format(self.args.branch))
 
-            logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, self.new_branches[args.branch]))
-            self.shas[ main_repo_name ] = self.new_branches[args.branch]
+            logger.debug("Branch {} is being built at sha1 {}.".format(self.args.branch, self.new_branches[self.args.branch]))
+            self.shas[ main_repo_name ] = self.new_branches[self.args.branch]
             self.build()
             return
 
