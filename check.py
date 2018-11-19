@@ -96,22 +96,23 @@ class CI(object):
                 fh.write(str(count))
         return count
 
-    def clone_repositories(self, server, config, sha1):
+    def clone_repositories(self, server, config, shas):
         logger = logging.getLogger(__name__)
 
         logger.debug("Clone the repositories")
         for repo in config['repos']:
+            repo_name = repo['name']
             repo_local_name = self.get_repo_local_name(repo)
             code, out = _system([git, 'clone', os.path.join(server['repositories'], repo_local_name), repo_local_name])
             if code != 0:
                 raise Exception("Could not clone repo")
             with cwd(repo_local_name):
-                logger.debug("Check out the given shas")
-                code, out = _system([git, 'checkout', sha1])
+                logger.debug("Check out the given sha")
+                code, out = _system([git, 'checkout', shas[repo_name]])
                 if code != 0:
                     raise Exception("Could not checkout sha1 {} in repository {}".format(sha1, repo_local_name))
 
-    def build(self, server, config, sha1):
+    def build(self, server, config, shas):
         logger = logging.getLogger(__name__)
         build_number = self.get_next_build_number(server)
         logger.debug("Build number: {}".format(build_number))
@@ -145,7 +146,7 @@ class CI(object):
                     build_directory = os.path.join( build_parent_directory, str(subbuild) )
                     os.mkdir(build_directory)
                     with cwd(build_directory):
-                        self.clone_repositories(server, config, sha1)
+                        self.clone_repositories(server, config, shas )
                         code, out = _system(case['exe'])
                         results['matrix'][subbuild] = {
                             'exit': code,
@@ -166,7 +167,7 @@ class CI(object):
         else:
             build_directory = build_parent_directory
             with cwd(build_directory):
-                self.clone_repositories(server, config, sha1)
+                self.clone_repositories(server, config, shas)
                 if 'steps' in config:
                     results['steps'] = []
                     logger.debug("Run the steps defined in the configuration")
@@ -205,6 +206,7 @@ class CI(object):
         # TODO: the first time we clone, ssh might want to verify the server an we might need to manually accept it.
         # TODO: How can we automate this?
         # print(config)
+        shas = {}
         first = True # only return branches of the first repository
         for repo in config['repos']:
             logger.debug("Repo url {}".format(repo['url']))
@@ -240,8 +242,11 @@ class CI(object):
             if first:
                 new_branches = self.get_branches(local_repo_path)
                 first = False
+            else:
+                branches = self.get_branches(local_repo_path)
+                shas[repo['name']] = branches[ repo['branch'] ]
             #logger.debug(yaml.dump(new_branches))
-        return old_branches, new_branches
+        return old_branches, new_branches, shas
 
     def failures(self, builds, server):
         logger = logging.getLogger(__name__)
@@ -307,7 +312,7 @@ class CI(object):
             return
 
 
-        old_branches, new_branches = self.update_central_repos(config, server)
+        old_branches, new_branches, shas = self.update_central_repos(config, server)
 
         # For each watched(!) repo get a list of branches and the sha for each branch before and after the update.
         # If each repo can have multiple branches then shall we really build all the combinations or should there be
@@ -317,12 +322,15 @@ class CI(object):
         # TODO If branch disappeared
         # TODO If new branch appeared
 
+        main_repo_name = config['repos'][0]['name']
+
         if args.branch:
             if args.branch not in new_branches:
                 raise Exception("Branch {} not available (any more?, yet?)".format(args.branch))
 
             logger.debug("Branch {} is being built at sha1 {}.".format(args.branch, new_branches[args.branch]))
-            self.build(server, config, new_branches[args.branch])
+            shas[ main_repo_name ] = new_branches[args.branch]
+            self.build(server, config, shas)
             return
 
         builds = []
@@ -333,10 +341,12 @@ class CI(object):
                     pass
                 else:
                     logger.debug("Branch {} changed.".format(branch))
-                    builds.append( self.build(server, config, new_branches[branch]) )
+                    shas[main_repo_name] = new_branches[branch]
+                    builds.append( self.build(server, config, shas) )
             else:
                 logger.debug("New branch seen: {}".format(branch))
-                builds.append( self.build(server, config, new_branches[branch]) )
+                shas[main_repo_name] = new_branches[branch]
+                builds.append( self.build(server, config, shas) )
 
         exit( self.failures(builds, server) )
 

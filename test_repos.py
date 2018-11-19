@@ -274,6 +274,7 @@ if sys.argv[1] == "crash":
         for i in range(count):
             user_config['repos'].append({
                     'name': 'repo' + str(i),
+                    'branch': 'master',
                     'type': 'git',
                     'url': self.repo[i],
                 })
@@ -282,3 +283,4 @@ if sys.argv[1] == "crash":
             fh.write(yaml.dump(user_config, explicit_start=True,  default_flow_style=False))
 
 
+        # TODO: tests a case where we have 2 repos each with 2 branches and we are usin a non-master branch in the 2nd repository

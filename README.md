@@ -25,6 +25,11 @@ Some CI system
 
 * Test what happens if the server.yml config file is missing, or if some of the parameters are missing, or if the directories don't exist or if they are not writable.
 
+If there is only one repository we can pick the sha of any branch (or just a sha)
+If there are multiple repositories the first one is the main repository and for the rest we need to tell which specific branch to use.
+In the future we might allow for multiple options in the other repositories, but for now that is not needed. (and maybe we should tur around the whole thing and provide a "check out a branch" function
+that can be used by the users)
+
 
 ## Plan
 
