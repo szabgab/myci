@@ -81,7 +81,7 @@ class CI(object):
 
 
     def get_next_build_number(self, server):
-        counter_file = os.path.join(server['repositories'], 'counter.txt')
+        counter_file = os.path.join(server['db'], 'counter.txt')
         if os.path.exists(counter_file):
             with open(counter_file, 'r+') as fh:
                 fcntl.lockf(fh, fcntl.LOCK_EX)

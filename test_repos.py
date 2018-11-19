@@ -234,6 +234,7 @@ if sys.argv[1] == "crash":
         self.server_file = os.path.join(root, 'server.yml')
         self.config_file = os.path.join(root, 'config.yml')  # this might be in a repository
         self.repositories = os.path.join(root, 'repositories')  # here is where we'll clone repos
+        self.db = os.path.join(root, 'db')  # here is where we'll clone repos
         self.workdir = os.path.join(root, 'workdir')
 
         self.repo = []
@@ -246,9 +247,11 @@ if sys.argv[1] == "crash":
         os.mkdir(root)
         os.mkdir(self.repositories)
         os.mkdir(self.workdir)
+        os.mkdir(self.db)
         # create config files
         server_config = {
             'repositories': self.repositories,
+            'db': self.db,
             'workdir': self.workdir,
             'agents' : {
                 'master' : {
