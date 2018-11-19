@@ -6,7 +6,10 @@ Some CI system
 ## TODO
 
 * Move the results.json to the db directory and call it id.json
-* Base the web application on the db directory 
+* Base the web application on the db directory
+* Shall we create the directories listed in the server config file or shall we expect the user to create them? What right should they have? 
+    - repositories
+    
 
 * Include the commit messages of the respective sha1 values in both the log file and the reporting json
 
@@ -50,8 +53,9 @@ Some CI system
 
 ## Development of the web application
 
+
 ```
-FLASK_APP=web.app FLASK_DEBUG=1 flask run --host 0.0.0.0
+CI_SERVER_CONFIG_FILE=server.yml  FLASK_APP=web.app FLASK_DEBUG=1 flask run --host 0.0.0.0
 ```
 
 

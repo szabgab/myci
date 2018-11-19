@@ -7,7 +7,11 @@ import yaml
 
 app = Flask(__name__)
 
-with open('server.yml') as fh:
+server_config_file = os.environ.get('CI_SERVER_CONFIG_FILE')
+if not server_config_file:
+    raise Exception("Missing the CI_SERVER_CONFIG_FILE environment variable.")
+
+with open(server_config_file) as fh:
     server = yaml.load(fh)
 
 @app.route("/")
