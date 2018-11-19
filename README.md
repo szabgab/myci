@@ -16,6 +16,8 @@ Some CI system
 * Run the steps on each agent
 * Have a post process to collect the results.
 
+* Test what happens if the server.yml config file is missing, or if some of the parameters are missing, or if the directories don't exist or if they are not writable.
+
 
 ## Plan
 
@@ -80,4 +82,14 @@ Install mail client and server  (accept the defaults)
 ```
 sudo apt-get install mailutils
 ```
+
+## Configuration
+
+
+### server.yml
+
+* repositories: Path to the parent directory where we'll keep clones of all the repositories. (Currently all the repos are immediately under this, but we might create a subdirectory for each user/project to)
+* workdir: parent directory of each build. (Each build will get its own directory where we'll have copies of the checked out repositories) Based on a configuration parameter we might automatically remove old direcroties
+* artifacts: location where we store all the artifacst. Each build will get its own directory here. This directory will also have a cleanup policy, separate from the build directory. Only files that are supposed to be part of a release should go here.
+* db: Path to the "database" of the builds. Here we'll store the meta information about each build. We have a file called "counter.txt" that has the number of the most recent build.
 
