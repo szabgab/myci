@@ -12,3 +12,5 @@ script:
   - pytest --cov
 after_success:
   - coveralls
+git:
+  depth: 9999999
