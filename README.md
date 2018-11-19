@@ -1,4 +1,7 @@
 # Repos
+[![Build Status](https://travis-ci.org/szabgab/repos.png)](https://travis-ci.org/szabgab/repos)
+[![Coverage Status](https://coveralls.io/repos/github/szabgab/repos/badge.svg?branch=main)](https://coveralls.io/github/szabgab/repos?branch=main)
+
 
 Some CI system
 
