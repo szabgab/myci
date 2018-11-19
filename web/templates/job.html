@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CI</title>
+<style>
+.failure {
+   color: red;
+}
+.success {
+   color: green;
+}
+
+.error {
+    color: red;
+}
+</style>
+</head>
+<body>
+<a href="/">main</a>
+<hr>
+<a href="/raw/{{ jobid }}">raw data</a><br>
+<span class="{{ results.status }}">{{ results.status }}</span>
+
+
+</body>
+</html>

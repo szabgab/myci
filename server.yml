@@ -1,3 +1,4 @@
+---
 repositories: /home/gabor/work/repos_dir/repositories/
 workdir: /home/gabor/work/repos_dir/build_parent/
 artifacts: /home/gabor/work/repos_dir/artifacts/

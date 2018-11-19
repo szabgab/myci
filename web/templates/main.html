@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CI</title>
+<style>
+.failure {
+   color: red;
+}
+.success {
+   color: green;
+}
+
+td {
+   padding-right: 10px;
+}
+</style>
+</head>
+<body>
+
+<table>
+   <tr>
+       <th>Job ID</th>
+       <th>Status</th>
+   </tr>
+{% for item in results %}
+   <tr>
+       <td><a href="/job/{{ item.id }}">{{ item.id }}</a></td>
+       <td class="{{ item.status }}">{{ item.status }}</td>
+   </tr>
+{% endfor  %}
+</table>
+
+</body>
+</html>

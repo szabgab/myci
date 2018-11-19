@@ -48,6 +48,12 @@ Some CI system
 * Mode 2: In the central configuration we have the pointer to the repositories and each repository has its own configurations. (But then maybe there is not need for monitoring other repositories?)
 
 
+## Development of the web application
+
+```
+FLASK_APP=web.app FLASK_DEBUG=1 flask run --host 0.0.0.0
+```
+
 
 ## Deployment
 
@@ -62,6 +68,10 @@ mkdir work
 mkdir work/repos_parent
 mkdir work/build_parent
 git clone https://github.com/szabgab/repos.git
+```
+
+```
+pip install -r requirements.txt
 ```
 
 Add the following line to the crontab:
