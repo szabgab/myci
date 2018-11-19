@@ -9,7 +9,7 @@ Some CI system
 * Base the web application on the db directory
 * Shall we create the directories listed in the server config file or shall we expect the user to create them? What right should they have? 
     - repositories
-    
+    - db
 
 * Include the commit messages of the respective sha1 values in both the log file and the reporting json
 

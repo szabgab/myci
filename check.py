@@ -243,6 +243,29 @@ class CI(object):
             #logger.debug(yaml.dump(new_branches))
         return old_branches, new_branches
 
+    def failures(self, builds, server):
+        logger = logging.getLogger(__name__)
+        # Once all the builds have finished we need to collect the success/failure data
+        failures = 0
+        logger.debug("Number of builds: {}".format(len(builds)))
+        for build_number in builds:
+            build_parent_directory = os.path.join(server['workdir'], str(build_number))
+            results_file = os.path.join(server['db'], str(build_number) + '.json')
+            logger.debug("results file: {}".format(results_file))
+            if not os.path.exists(results_file):
+                failures += 1
+                continue
+            with open(results_file) as fh:
+                results = json.load(fh)
+            if not 'status' in results:
+                failures += 1
+                continue
+            if results['status'] != 'success':
+                failures += 1
+        logger.debug("Number of failures: {}".format(failures))
+        return failures
+
+
     def main(self):
         self.setup_logger()
         logger = logging.getLogger(__name__)
@@ -315,25 +338,8 @@ class CI(object):
                 logger.debug("New branch seen: {}".format(branch))
                 builds.append( self.build(server, config, new_branches[branch]) )
 
-        # Once all the builds have finished we need to collect the success/failure data
-        failures = 0
-        logger.debug("Number of builds: {}".format(len(builds)))
-        for build_number in builds:
-            build_parent_directory = os.path.join(server['workdir'], str(build_number))
-            results_file = os.path.join(server['db'], str(build_number) + '.json')
-            logger.debug("results file: {}".format(results_file))
-            if not os.path.exists(results_file):
-                failures += 1
-                continue
-            with open(results_file) as fh:
-                results = json.load(fh)
-            if not 'status' in results:
-                failures += 1
-                continue
-            if results['status'] != 'success':
-                failures += 1
-        logger.debug("Number of failures: {}".format(failures))
-        exit(failures)
+        exit( self.failures(builds, server) )
+
 
 if __name__ == '__main__':
     CI().main()
