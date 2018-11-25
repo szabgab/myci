@@ -1,6 +1,6 @@
 # MyCI 
-[![Build Status](https://travis-ci.org/szabgab/repos.png)](https://travis-ci.org/szabgab/repos)
-[![Coverage Status](https://coveralls.io/repos/github/szabgab/repos/badge.svg?branch=main)](https://coveralls.io/github/szabgab/repos?branch=main)
+[![Build Status](https://travis-ci.org/szabgab/myci.png)](https://travis-ci.org/szabgab/myci)
+[![Coverage Status](https://coveralls.io/repos/github/szabgab/myci/badge.svg?branch=main)](https://coveralls.io/github/szabgab/myci?branch=main)
 
 
 Some CI system
