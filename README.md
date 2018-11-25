@@ -1,4 +1,4 @@
-# Repos
+# MyCI 
 [![Build Status](https://travis-ci.org/szabgab/repos.png)](https://travis-ci.org/szabgab/repos)
 [![Coverage Status](https://coveralls.io/repos/github/szabgab/repos/badge.svg?branch=main)](https://coveralls.io/github/szabgab/repos?branch=main)
 
@@ -80,7 +80,7 @@ This is just one possibility
 mkdir work
 mkdir work/repos_parent
 mkdir work/build_parent
-git clone https://github.com/szabgab/repos.git
+git clone https://github.com/szabgab/myci.git
 ```
 
 ```
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 Add the following line to the crontab:
 
 ```
-* * * * * python3 repos/check.py --server repos/server.yml --config repos/config.yml
+* * * * * python3 myci/check.py --server myci/server.yml --config myci/config.yml
 ```
 
 (Run crontab -e and replace all the comment lines with the line above)
