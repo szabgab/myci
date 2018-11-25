@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import shlex
-from mytools import cwd, capture2
+from myci.tools import cwd, capture2
 
 git = 'git'
 

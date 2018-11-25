@@ -1,4 +1,4 @@
-from mytools import cwd, capture2
+from myci.tools import cwd, capture2
 import json
 import os
 import yaml
